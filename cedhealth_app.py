@@ -51,6 +51,16 @@ def init_db():
         )
     ''')
     
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS weight_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            weight REAL,
+            date TEXT,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+    
     # Add columns if they don't exist (for existing databases)
     try:
         c.execute('ALTER TABLE meals ADD COLUMN quantity REAL')
@@ -136,13 +146,36 @@ def dashboard():
     avg_calories_result = c.fetchone()[0]
     avg_daily_calories = int(avg_calories_result) if avg_calories_result else 0
 
+    # Get daily calories for the past 7 days
+    c.execute('''
+        SELECT date, SUM(calories) 
+        FROM meals 
+        WHERE user_id = ? 
+        AND date >= date('now', '-7 days')
+        GROUP BY date 
+        ORDER BY date
+    ''', (user_id,))
+    daily_calories = c.fetchall()
+
+    # Get daily weight for the past 7 days
+    c.execute('''
+        SELECT date, weight 
+        FROM weight_logs 
+        WHERE user_id = ? 
+        AND date >= date('now', '-7 days')
+        ORDER BY date
+    ''', (user_id,))
+    daily_weights = c.fetchall()
+
     conn.close()
 
     return render_template('dashboard.html', 
                          username=session['username'],
                          goal=goal,
                          total_meals=total_meals,
-                         avg_daily_calories=avg_daily_calories)
+                         avg_daily_calories=avg_daily_calories,
+                         daily_calories=daily_calories,
+                         daily_weights=daily_weights)
 
 
 @app.route('/logout')
@@ -310,6 +343,30 @@ def delete_meal(meal_id):
     conn.commit()
     conn.close()
     return redirect(url_for('meals'))
+
+
+@app.route('/log_weight', methods=['POST'])
+def log_weight():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    weight = request.form.get('weight', type=float)
+    if weight:
+        conn = sqlite3.connect('cedhealth.db')
+        c = conn.cursor()
+        
+        # Delete existing weight log for today if it exists
+        today = datetime.now().date().isoformat()
+        c.execute('DELETE FROM weight_logs WHERE user_id = ? AND date = ?',
+                  (session['user_id'], today))
+        
+        # Insert new weight log
+        c.execute('INSERT INTO weight_logs (user_id, weight, date) VALUES (?, ?, ?)',
+                  (session['user_id'], weight, today))
+        conn.commit()
+        conn.close()
+
+    return redirect(url_for('dashboard'))
 
 
 # ---------- RUN ----------
