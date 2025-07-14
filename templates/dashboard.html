@@ -16,6 +16,47 @@
         </div>
 
         <div class="content">
+            <!-- Goals and Progress Section -->
+            <div class="goals-progress-section">
+                <div class="goals-card">
+                    <h2>🎯 Your Goals</h2>
+                    {% if goal %}
+                        <div class="goals-display">
+                            <div class="goal-item">
+                                <span class="goal-label">Weight Goal:</span>
+                                <span class="goal-value">{{ goal[0] }} kg</span>
+                            </div>
+                            <div class="goal-item">
+                                <span class="goal-label">Daily Calories:</span>
+                                <span class="goal-value">{{ goal[1] }} cal</span>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="no-goals">
+                            <p>No goals set yet</p>
+                            <a href="/goals" class="set-goals-btn">Set Your Goals</a>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="progress-card">
+                    <h2>📊 Weekly Progress</h2>
+                    <div class="chart-container">
+                        <canvas id="progressChart" width="400" height="200"></canvas>
+                    </div>
+                    <div class="progress-stats">
+                        <div class="stat-item">
+                            <span class="stat-value">{{ total_meals or 0 }}</span>
+                            <span class="stat-label">Total Meals</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">{{ avg_daily_calories or 0 }}</span>
+                            <span class="stat-label">Avg Daily Calories</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="nav-grid">
                 <a href="/goals" class="nav-item">
                     <div class="nav-icon">🎯</div>
@@ -56,7 +97,116 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        .goals-progress-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .goals-card, .progress-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #f1f5f9;
+        }
+
+        .goals-card h2, .progress-card h2 {
+            margin-bottom: 20px;
+            color: #1e293b;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .goals-display {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .goal-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f8fafc;
+            border-radius: 10px;
+            border-left: 4px solid #4f46e5;
+        }
+
+        .goal-label {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .goal-value {
+            color: #1e293b;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .no-goals {
+            text-align: center;
+            padding: 30px 20px;
+            color: #64748b;
+        }
+
+        .no-goals p {
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .set-goals-btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .set-goals-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+        }
+
+        .chart-container {
+            margin: 20px 0;
+            height: 200px;
+            position: relative;
+        }
+
+        .progress-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            display: block;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #4f46e5;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
         .nav-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -117,6 +267,20 @@
         }
 
         @media (max-width: 768px) {
+            .goals-progress-section {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .goals-card, .progress-card {
+                padding: 20px;
+            }
+
+            .progress-stats {
+                flex-direction: column;
+                gap: 15px;
+            }
+
             .nav-grid {
                 grid-template-columns: 1fr;
                 gap: 15px;
@@ -127,5 +291,65 @@
             }
         }
     </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            
+            // Sample data - in a real app, this would come from the backend
+            const chartData = {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Daily Calories',
+                    data: [1800, 2100, 1950, 2200, 1750, 2050, 1900],
+                    borderColor: '#4f46e5',
+                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                }]
+            };
+
+            new Chart(ctx, {
+                type: 'line',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                color: '#f1f5f9'
+                            },
+                            ticks: {
+                                color: '#64748b'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#64748b'
+                            }
+                        }
+                    },
+                    elements: {
+                        point: {
+                            radius: 4,
+                            hoverRadius: 6,
+                            backgroundColor: '#4f46e5'
+                        }
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html>

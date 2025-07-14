@@ -105,7 +105,31 @@ def signup():
 def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    return render_template('dashboard.html', username=session['username'])
+    
+    user_id = session['user_id']
+    conn = sqlite3.connect('cedhealth.db')
+    c = conn.cursor()
+    
+    # Get user's goals
+    c.execute('SELECT weight_goal, calorie_goal FROM goals WHERE user_id = ?', (user_id,))
+    goal = c.fetchone()
+    
+    # Get meal statistics
+    c.execute('SELECT COUNT(*) FROM meals WHERE user_id = ?', (user_id,))
+    total_meals = c.fetchone()[0]
+    
+    # Calculate average daily calories
+    c.execute('SELECT AVG(calories) FROM meals WHERE user_id = ?', (user_id,))
+    avg_calories_result = c.fetchone()[0]
+    avg_daily_calories = int(avg_calories_result) if avg_calories_result else 0
+    
+    conn.close()
+    
+    return render_template('dashboard.html', 
+                         username=session['username'],
+                         goal=goal,
+                         total_meals=total_meals,
+                         avg_daily_calories=avg_daily_calories)
 
 
 @app.route('/logout')
