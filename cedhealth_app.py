@@ -32,6 +32,9 @@ def init_db():
             user_id INTEGER,
             weight_goal REAL,
             calorie_goal INTEGER,
+            protein_goal REAL,
+            carbs_goal REAL,
+            fat_goal REAL,
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     ''')
@@ -71,6 +74,23 @@ def init_db():
         c.execute('ALTER TABLE meals ADD COLUMN unit TEXT')
     except sqlite3.OperationalError:
         pass  # Column already exists
+    
+    # Add macronutrient goal columns if they don't exist
+    try:
+        c.execute('ALTER TABLE goals ADD COLUMN protein_goal REAL')
+    except sqlite3.OperationalError:
+        pass  # Column already exists
+    
+    try:
+        c.execute('ALTER TABLE goals ADD COLUMN carbs_goal REAL')
+    except sqlite3.OperationalError:
+        pass  # Column already exists
+    
+    try:
+        c.execute('ALTER TABLE goals ADD COLUMN fat_goal REAL')
+    except sqlite3.OperationalError:
+        pass  # Column already exists
+    
     conn.commit()
     conn.close()
 
@@ -194,12 +214,15 @@ def goals():
     if request.method == 'POST':
         weight_goal = request.form.get('weight_goal', type=float)
         calorie_goal = request.form.get('calorie_goal', type=int)
+        protein_goal = request.form.get('protein_goal', type=float)
+        carbs_goal = request.form.get('carbs_goal', type=float)
+        fat_goal = request.form.get('fat_goal', type=float)
         c.execute('DELETE FROM goals WHERE user_id = ?', (user_id, ))
         c.execute(
-            'INSERT INTO goals (user_id, weight_goal, calorie_goal) VALUES (?, ?, ?)',
-            (user_id, weight_goal, calorie_goal))
+            'INSERT INTO goals (user_id, weight_goal, calorie_goal, protein_goal, carbs_goal, fat_goal) VALUES (?, ?, ?, ?, ?, ?)',
+            (user_id, weight_goal, calorie_goal, protein_goal, carbs_goal, fat_goal))
         conn.commit()
-    c.execute('SELECT weight_goal, calorie_goal FROM goals WHERE user_id = ?',
+    c.execute('SELECT weight_goal, calorie_goal, protein_goal, carbs_goal, fat_goal FROM goals WHERE user_id = ?',
               (user_id, ))
     goal = c.fetchone()
     conn.close()
@@ -322,13 +345,28 @@ def meals():
     else:
         c.execute('SELECT * FROM meals WHERE user_id = ?', (user_id, ))
     meals_by_user = c.fetchall()
+    
+    # Get macronutrient totals for filtered meals
+    if date_filter:
+        c.execute('SELECT SUM(protein), SUM(carbs), SUM(fat) FROM meals WHERE user_id = ? AND date = ?',
+                  (user_id, date_filter))
+    else:
+        c.execute('SELECT SUM(protein), SUM(carbs), SUM(fat) FROM meals WHERE user_id = ?', (user_id, ))
+    macro_totals = c.fetchone()
+    
+    # Get user's macronutrient goals
+    c.execute('SELECT protein_goal, carbs_goal, fat_goal FROM goals WHERE user_id = ?', (user_id,))
+    macro_goals = c.fetchone()
+    
     conn.close()
 
     return render_template('meals.html',
                            meals=meals_by_user,
                            selected_date=date_filter,
                            nutrition_data=nutrition_data,
-                           error_message=error_message)
+                           error_message=error_message,
+                           macro_totals=macro_totals,
+                           macro_goals=macro_goals)
 
 
 @app.route('/delete_meal/<int:meal_id>', methods=['GET', 'POST'])

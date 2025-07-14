@@ -29,6 +29,24 @@
                            value="{{ goal[1] if goal else '' }}" placeholder="Enter daily calorie target">
                 </div>
 
+                <div class="form-group">
+                    <label for="protein_goal">Daily Protein Goal (g)</label>
+                    <input type="number" id="protein_goal" name="protein_goal" step="0.1"
+                           value="{{ goal[2] if goal else '' }}" placeholder="Enter daily protein target">
+                </div>
+
+                <div class="form-group">
+                    <label for="carbs_goal">Daily Carbs Goal (g)</label>
+                    <input type="number" id="carbs_goal" name="carbs_goal" step="0.1"
+                           value="{{ goal[3] if goal else '' }}" placeholder="Enter daily carbs target">
+                </div>
+
+                <div class="form-group">
+                    <label for="fat_goal">Daily Fat Goal (g)</label>
+                    <input type="number" id="fat_goal" name="fat_goal" step="0.1"
+                           value="{{ goal[4] if goal else '' }}" placeholder="Enter daily fat target">
+                </div>
+
                 <button type="submit" class="btn btn-primary">Save Goals</button>
             </form>
 
