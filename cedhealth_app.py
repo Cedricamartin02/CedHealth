@@ -234,50 +234,74 @@ def analyze_meal():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    nutrition_data = None
+    nutrition_data = []
     error_message = None
+    total_nutrition = {'calories': 0, 'protein': 0, 'fat': 0, 'carbs': 0}
 
     if request.method == 'POST':
         meal_query = request.form.get('meal_query')
         if meal_query:
-            try:
-                response = requests.post(API_URL,
-                                         headers=HEADERS,
-                                         json={"query": meal_query})
-                data = response.json()
-                if 'foods' in data:
-                    food = data['foods'][0]
-                    nutrition_data = {
-                        'name': food['food_name'],
-                        'calories': food['nf_calories'],
-                        'protein': food['nf_protein'],
-                        'fat': food['nf_total_fat'],
-                        'carbs': food['nf_total_carbohydrate']
-                    }
+            # Split the query by commas and clean up each item
+            food_items = [item.strip() for item in meal_query.split(',') if item.strip()]
+            
+            if food_items:
+                conn = sqlite3.connect('cedhealth.db')
+                c = conn.cursor()
+                current_date = datetime.now().date().isoformat()
+                
+                for food_item in food_items:
+                    try:
+                        response = requests.post(API_URL,
+                                                 headers=HEADERS,
+                                                 json={"query": food_item})
+                        data = response.json()
+                        
+                        if 'foods' in data and data['foods']:
+                            food = data['foods'][0]
+                            food_nutrition = {
+                                'name': food['food_name'],
+                                'calories': food['nf_calories'],
+                                'protein': food['nf_protein'],
+                                'fat': food['nf_total_fat'],
+                                'carbs': food['nf_total_carbohydrate']
+                            }
+                            
+                            nutrition_data.append(food_nutrition)
+                            
+                            # Add to totals
+                            total_nutrition['calories'] += food_nutrition['calories']
+                            total_nutrition['protein'] += food_nutrition['protein']
+                            total_nutrition['fat'] += food_nutrition['fat']
+                            total_nutrition['carbs'] += food_nutrition['carbs']
 
-                    # Save to DB
-                    conn = sqlite3.connect('cedhealth.db')
-                    c = conn.cursor()
-                    c.execute(
-                        '''
-                        INSERT INTO meals (user_id, meal_name, calories, protein, fat, carbs, date)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
-                    ''',
-                        (session['user_id'], nutrition_data['name'],
-                         nutrition_data['calories'], nutrition_data['protein'],
-                         nutrition_data['fat'], nutrition_data['carbs'],
-                         datetime.now().date().isoformat()))
+                            # Save to DB
+                            c.execute(
+                                '''
+                                INSERT INTO meals (user_id, meal_name, calories, protein, fat, carbs, date)
+                                VALUES (?, ?, ?, ?, ?, ?, ?)
+                            ''',
+                                (session['user_id'], food_nutrition['name'],
+                                 food_nutrition['calories'], food_nutrition['protein'],
+                                 food_nutrition['fat'], food_nutrition['carbs'],
+                                 current_date))
+                        else:
+                            error_message = f"Nutrition data not found for: {food_item}"
+                            break
+                    except Exception as e:
+                        error_message = f"Error processing '{food_item}': {str(e)}"
+                        break
+                
+                if not error_message:
                     conn.commit()
-                    conn.close()
-                else:
-                    error_message = "Nutrition data not found."
-            except Exception as e:
-                error_message = str(e)
+                conn.close()
+            else:
+                error_message = "Please enter at least one food item."
         else:
-            error_message = "Please enter a meal with quantity (e.g., '2 cups rice')."
+            error_message = "Please enter food items separated by commas."
 
     return render_template('analyze_meal.html',
                            nutrition_data=nutrition_data,
+                           total_nutrition=total_nutrition,
                            error_message=error_message)
 
 

@@ -272,7 +272,7 @@
                 <form method="POST" action="{{ url_for('analyze_meal') }}">
                     <div class="form-group">
                         <div class="input-wrapper">
-                            <input type="text" name="meal_query" placeholder="Enter quantity and food (e.g., 2 cups rice, 6 oz grilled chicken)" required>
+                            <input type="text" name="meal_query" placeholder="Enter multiple foods separated by commas (e.g., 2 eggs, 1 slice toast, 1 cup orange juice)" required>
                         </div>
                         <button type="submit" class="btn">Analyze Meal</button>
                     </div>
@@ -284,25 +284,42 @@
                     <div class="results-card">
                         <div class="results-header">
                             <h2>Nutrition Analysis</h2>
-                            <div class="meal-name">"{{ nutrition_data.name }}"</div>
+                            <div class="meal-name">{{ nutrition_data|length }} food item(s) analyzed</div>
                         </div>
                         
-                        <div class="nutrition-grid">
-                            <div class="nutrition-item">
-                                <div class="nutrition-value">{{ "%.0f"|format(nutrition_data.calories) }}</div>
-                                <div class="nutrition-label">Calories</div>
+                        <!-- Individual Food Items -->
+                        {% for food in nutrition_data %}
+                            <div style="margin-bottom: 20px; padding: 15px; background: rgba(255, 255, 255, 0.7); border-radius: 8px;">
+                                <h4 style="margin-bottom: 10px; color: #4f46e5;">{{ food.name }}</h4>
+                                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                                    <span><strong>{{ "%.0f"|format(food.calories) }}</strong> cal</span>
+                                    <span><strong>{{ "%.1f"|format(food.protein) }}g</strong> protein</span>
+                                    <span><strong>{{ "%.1f"|format(food.fat) }}g</strong> fat</span>
+                                    <span><strong>{{ "%.1f"|format(food.carbs) }}g</strong> carbs</span>
+                                </div>
                             </div>
-                            <div class="nutrition-item">
-                                <div class="nutrition-value">{{ "%.1f"|format(nutrition_data.protein) }}g</div>
-                                <div class="nutrition-label">Protein</div>
-                            </div>
-                            <div class="nutrition-item">
-                                <div class="nutrition-value">{{ "%.1f"|format(nutrition_data.fat) }}g</div>
-                                <div class="nutrition-label">Fat</div>
-                            </div>
-                            <div class="nutrition-item">
-                                <div class="nutrition-value">{{ "%.1f"|format(nutrition_data.carbs) }}g</div>
-                                <div class="nutrition-label">Carbs</div>
+                        {% endfor %}
+                        
+                        <!-- Total Nutrition -->
+                        <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
+                            <h3 style="text-align: center; margin-bottom: 15px; color: #0f172a;">Total Nutrition</h3>
+                            <div class="nutrition-grid">
+                                <div class="nutrition-item">
+                                    <div class="nutrition-value">{{ "%.0f"|format(total_nutrition.calories) }}</div>
+                                    <div class="nutrition-label">Calories</div>
+                                </div>
+                                <div class="nutrition-item">
+                                    <div class="nutrition-value">{{ "%.1f"|format(total_nutrition.protein) }}g</div>
+                                    <div class="nutrition-label">Protein</div>
+                                </div>
+                                <div class="nutrition-item">
+                                    <div class="nutrition-value">{{ "%.1f"|format(total_nutrition.fat) }}g</div>
+                                    <div class="nutrition-label">Fat</div>
+                                </div>
+                                <div class="nutrition-item">
+                                    <div class="nutrition-value">{{ "%.1f"|format(total_nutrition.carbs) }}g</div>
+                                    <div class="nutrition-label">Carbs</div>
+                                </div>
                             </div>
                         </div>
                     </div>
