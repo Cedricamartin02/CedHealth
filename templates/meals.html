@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,7 +24,7 @@
                             <strong>⚠️ Error:</strong> {{ error_message }}
                         </div>
                     {% endif %}
-                    
+
                     {% if nutrition_data %}
                         <div class="success-message">
                             <strong>✅ Success:</strong> Meal "{{ nutrition_data.name }}" added successfully!
@@ -69,7 +68,7 @@
             <div class="meals-section">
                 <div class="section-card">
                     <h2>📋 Your Meals {% if selected_date %}for {{ selected_date }}{% endif %}</h2>
-                    
+
                     {% if meals %}
                         <div class="meals-grid">
                             {% for meal in meals %}
@@ -77,6 +76,9 @@
                                     <div class="meal-header">
                                         <h3>{{ meal[2] }}</h3>
                                         <span class="meal-date">{{ meal[7] }}</span>
+                                    </div>
+                                    <div class="meal-measurement">
+                                        <span class="measurement-badge">{{ meal[8] }} {{ meal[9] }}</span>
                                     </div>
                                     <div class="meal-nutrition">
                                         <div class="nutrition-item">
@@ -295,6 +297,19 @@
             font-weight: 500;
         }
 
+        .meal-measurement {
+            margin-bottom: 10px;
+        }
+
+        .measurement-badge {
+            background: #edf2f7;
+            color: #475569;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
         .meal-nutrition {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -388,16 +403,16 @@
             .form-group {
                 flex-direction: column;
             }
-            
+
             .input-wrapper {
                 min-width: auto;
                 max-width: none;
             }
-            
+
             .meals-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .meal-header {
                 flex-direction: column;
                 gap: 10px;

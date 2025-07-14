@@ -45,6 +45,8 @@ def init_db():
             fat REAL,
             carbs REAL,
             date TEXT,
+            quantity REAL,
+            unit TEXT,
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     ''')
@@ -105,26 +107,26 @@ def signup():
 def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
     user_id = session['user_id']
     conn = sqlite3.connect('cedhealth.db')
     c = conn.cursor()
-    
+
     # Get user's goals
     c.execute('SELECT weight_goal, calorie_goal FROM goals WHERE user_id = ?', (user_id,))
     goal = c.fetchone()
-    
+
     # Get meal statistics
     c.execute('SELECT COUNT(*) FROM meals WHERE user_id = ?', (user_id,))
     total_meals = c.fetchone()[0]
-    
+
     # Calculate average daily calories
     c.execute('SELECT AVG(calories) FROM meals WHERE user_id = ?', (user_id,))
     avg_calories_result = c.fetchone()[0]
     avg_daily_calories = int(avg_calories_result) if avg_calories_result else 0
-    
+
     conn.close()
-    
+
     return render_template('dashboard.html', 
                          username=session['username'],
                          goal=goal,
@@ -172,7 +174,7 @@ def analyze_meal():
         quantity = request.form.get('quantity')
         unit = request.form.get('unit')
         food_name = request.form.get('food_name')
-        
+
         if quantity and unit and food_name:
             # Combine quantity, unit, and food name for API query
             meal_query = f"{quantity} {unit} {food_name}"
@@ -196,13 +198,13 @@ def analyze_meal():
                     c = conn.cursor()
                     c.execute(
                         '''
-                        INSERT INTO meals (user_id, meal_name, calories, protein, fat, carbs, date)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                        INSERT INTO meals (user_id, meal_name, calories, protein, fat, carbs, date, quantity, unit)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ''',
                         (session['user_id'], nutrition_data['name'],
                          nutrition_data['calories'], nutrition_data['protein'],
                          nutrition_data['fat'], nutrition_data['carbs'],
-                         datetime.now().date().isoformat()))
+                         datetime.now().date().isoformat(), float(quantity), unit))
                     conn.commit()
                     conn.close()
                 else:
@@ -230,7 +232,7 @@ def meals():
         quantity = request.form.get('quantity')
         unit = request.form.get('unit')
         food_name = request.form.get('food_name')
-        
+
         if quantity and unit and food_name:
             # Combine quantity, unit, and food name for API query
             meal_query = f"{quantity} {unit} {food_name}"
@@ -254,13 +256,13 @@ def meals():
                     c = conn.cursor()
                     c.execute(
                         '''
-                        INSERT INTO meals (user_id, meal_name, calories, protein, fat, carbs, date)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                        INSERT INTO meals (user_id, meal_name, calories, protein, fat, carbs, date, quantity, unit)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ''',
                         (session['user_id'], nutrition_data['name'],
                          nutrition_data['calories'], nutrition_data['protein'],
                          nutrition_data['fat'], nutrition_data['carbs'],
-                         datetime.now().date().isoformat()))
+                         datetime.now().date().isoformat(), float(quantity), unit))
                     conn.commit()
                     conn.close()
                 else:
