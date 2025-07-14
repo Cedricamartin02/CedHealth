@@ -1,18 +1,118 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Set/View Goals - CedHealth</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Set Goals - CedHealth</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <h2>Set Your Health Goals</h2>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Health Goals</h1>
+            <p>Set and track your health targets</p>
+        </div>
 
-    <form method="POST">
-        Weight Goal (kg): <input type="number" name="weight_goal" value="{{ goals.weight_goal if goals else '' }}"><br><br>
-        Calorie Goal (kcal): <input type="number" name="calorie_goal" value="{{ goals.calorie_goal if goals else '' }}"><br><br>
-        <input type="submit" value="Save Goals">
-    </form>
+        <div class="content">
+            <form method="POST" class="form-container">
+                <div class="form-group">
+                    <label for="weight_goal">Weight Goal (kg)</label>
+                    <input type="number" id="weight_goal" name="weight_goal" step="0.1" 
+                           value="{{ goal[0] if goal else '' }}" placeholder="Enter your target weight">
+                </div>
 
-    <a href="/dashboard">Back to Dashboard</a>
+                <div class="form-group">
+                    <label for="calorie_goal">Daily Calorie Goal</label>
+                    <input type="number" id="calorie_goal" name="calorie_goal" 
+                           value="{{ goal[1] if goal else '' }}" placeholder="Enter daily calorie target">
+                </div>
+
+                <button type="submit" class="btn btn-primary">Save Goals</button>
+            </form>
+
+            <div class="back-link">
+                <a href="/dashboard">← Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .form-container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+            font-size: 0.95rem;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 16px 20px;
+            font-size: 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            background: #f9fafb;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #4f46e5;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .back-link a {
+            color: #4f46e5;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .back-link a:hover {
+            color: #7c3aed;
+        }
+    </style>
 </body>
 </html>

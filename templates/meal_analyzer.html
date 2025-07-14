@@ -1,43 +1,219 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meal History - CedHealth</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <h2>Your Logged Meals</h2>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Meal History</h1>
+            <p>Track your nutritional progress</p>
+        </div>
 
-    {% if meals %}
-    <table border="1" cellpadding="8" cellspacing="0">
-        <tr>
-            <th>Date</th>
-            <th>Meal</th>
-            <th>Calories</th>
-            <th>Protein (g)</th>
-            <th>Carbs (g)</th>
-            <th>Fat (g)</th>
-            <th>Action</th>
-        </tr>
-        {% for meal in meals %}
-        <tr>
-            <td>{{ meal.date }}</td>
-            <td>{{ meal.meal }}</td>
-            <td>{{ meal.cal | round }}</td>
-            <td>{{ meal.protein | round(1) }}</td>
-            <td>{{ meal.carbs | round(1) }}</td>
-            <td>{{ meal.fat | round(1) }}</td>
-            <td>
-                <form action="/delete_meal/{{ meal.id }}" method="POST" style="display:inline;">
-                    <button type="submit" onclick="return confirm('Delete this meal?')">❌</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
-    {% else %}
-        <p>No meals logged yet.</p>
-    {% endif %}
+        <div class="content">
+            {% if meals %}
+                <div class="table-container">
+                    <table class="meals-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Meal</th>
+                                <th>Calories</th>
+                                <th>Protein (g)</th>
+                                <th>Carbs (g)</th>
+                                <th>Fat (g)</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for meal in meals %}
+                            <tr>
+                                <td>{{ meal.date }}</td>
+                                <td class="meal-name">{{ meal.meal }}</td>
+                                <td class="calories">{{ meal.cal | round }}</td>
+                                <td>{{ meal.protein | round(1) }}</td>
+                                <td>{{ meal.carbs | round(1) }}</td>
+                                <td>{{ meal.fat | round(1) }}</td>
+                                <td>
+                                    <form action="/delete_meal/{{ meal.id }}" method="POST" style="display:inline;">
+                                        <button type="submit" class="btn-delete" onclick="return confirm('Delete this meal?')">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">📊</div>
+                    <h3>No meals logged yet</h3>
+                    <p>Start tracking your meals to see your nutritional progress</p>
+                    <a href="/analyze_meal" class="btn btn-primary">Add Your First Meal</a>
+                </div>
+            {% endif %}
 
-    <a href="/dashboard">Back to Dashboard</a>
+            <div class="back-link">
+                <a href="/dashboard">← Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .table-container {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #f1f5f9;
+            overflow-x: auto;
+            margin-bottom: 30px;
+        }
+
+        .meals-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+
+        .meals-table th {
+            background: #f8fafc;
+            padding: 16px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .meals-table td {
+            padding: 16px 12px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #1e293b;
+        }
+
+        .meals-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .meals-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .meal-name {
+            font-weight: 500;
+            color: #4f46e5;
+        }
+
+        .calories {
+            font-weight: 600;
+            color: #059669;
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-delete:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 30px;
+            background: #f8fafc;
+            border-radius: 16px;
+            margin-bottom: 30px;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            color: #64748b;
+            margin-bottom: 25px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .back-link a {
+            color: #4f46e5;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .back-link a:hover {
+            color: #7c3aed;
+        }
+
+        @media (max-width: 768px) {
+            .table-container {
+                padding: 20px;
+            }
+            
+            .meals-table {
+                font-size: 0.9rem;
+            }
+            
+            .meals-table th,
+            .meals-table td {
+                padding: 12px 8px;
+            }
+            
+            .meals-table th {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
 </body>
 </html>

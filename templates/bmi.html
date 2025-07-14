@@ -1,34 +1,267 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BMI Calculator - CedHealth</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <h2>BMI Calculator</h2>
-        <form method="POST">
-            <label>Weight (kg):</label>
-            <input name="weight" type="number" step="0.1" required><br>
+        <div class="header">
+            <h1>⚖️ BMI Calculator</h1>
+            <p>Calculate your Body Mass Index</p>
+        </div>
 
-            <label>Height (cm):</label>
-            <input name="height" type="number" step="0.1" required><br>
-
-            <input type="submit" value="Calculate BMI">
-        </form>
-
-        {% if result %}
-            {% if result.error %}
-                <p class="error">{{ result.error }}</p>
-            {% else %}
-                <div class="result">
-                    <h3>Your BMI: {{ result.bmi }}</h3>
-                    <p>Category: <strong>{{ result.category }}</strong></p>
+        <div class="content">
+            {% if result and result.error %}
+                <div class="error">
+                    <strong>⚠️ Error:</strong> {{ result.error }}
                 </div>
             {% endif %}
-        {% endif %}
 
-        <a href="/dashboard" class="btn">Back to Dashboard</a>
+            <form method="POST" class="form-container">
+                <div class="form-group">
+                    <label for="weight">Weight (kg)</label>
+                    <input type="number" id="weight" name="weight" step="0.1" required 
+                           placeholder="Enter your weight in kg">
+                </div>
+
+                <div class="form-group">
+                    <label for="height">Height (cm)</label>
+                    <input type="number" id="height" name="height" step="0.1" required 
+                           placeholder="Enter your height in cm">
+                </div>
+
+                <button type="submit" class="btn btn-primary">Calculate BMI</button>
+            </form>
+
+            {% if result and not result.error %}
+                <div class="results-section">
+                    <div class="results-card">
+                        <div class="results-header">
+                            <h2>Your BMI Results</h2>
+                        </div>
+                        
+                        <div class="bmi-display">
+                            <div class="bmi-value">{{ result.bmi }}</div>
+                            <div class="bmi-category {{ result.category|lower|replace(' ', '-') }}">
+                                {{ result.category }}
+                            </div>
+                        </div>
+                        
+                        <div class="bmi-ranges">
+                            <div class="range-item">
+                                <span class="range-label">Underweight</span>
+                                <span class="range-value">&lt; 18.5</span>
+                            </div>
+                            <div class="range-item">
+                                <span class="range-label">Normal weight</span>
+                                <span class="range-value">18.5 - 24.9</span>
+                            </div>
+                            <div class="range-item">
+                                <span class="range-label">Overweight</span>
+                                <span class="range-value">25 - 29.9</span>
+                            </div>
+                            <div class="range-item">
+                                <span class="range-label">Obese</span>
+                                <span class="range-value">≥ 30</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="back-link">
+                <a href="/dashboard">← Back to Dashboard</a>
+            </div>
+        </div>
     </div>
+
+    <style>
+        .form-container {
+            max-width: 400px;
+            margin: 0 auto 40px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+            font-size: 0.95rem;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 16px 20px;
+            font-size: 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            background: #f9fafb;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #4f46e5;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+        }
+
+        .error {
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 16px 20px;
+            border-radius: 12px;
+            border-left: 4px solid #dc2626;
+            margin-bottom: 30px;
+            font-weight: 500;
+        }
+
+        .results-section {
+            margin-top: 40px;
+        }
+
+        .results-card {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-radius: 16px;
+            padding: 30px;
+            border: 1px solid #bae6fd;
+            text-align: center;
+        }
+
+        .results-header {
+            margin-bottom: 25px;
+        }
+
+        .results-header h2 {
+            color: #0f172a;
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .bmi-display {
+            margin-bottom: 30px;
+        }
+
+        .bmi-value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+
+        .bmi-category {
+            font-size: 1.2rem;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .bmi-category.underweight {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .bmi-category.normal {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .bmi-category.overweight {
+            background: #fed7aa;
+            color: #c2410c;
+        }
+
+        .bmi-category.obese {
+            background: #fecaca;
+            color: #dc2626;
+        }
+
+        .bmi-ranges {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .range-item {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .range-label {
+            display: block;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+
+        .range-value {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .back-link a {
+            color: #4f46e5;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .back-link a:hover {
+            color: #7c3aed;
+        }
+
+        @media (max-width: 768px) {
+            .bmi-value {
+                font-size: 2.5rem;
+            }
+            
+            .bmi-ranges {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </body>
 </html>
