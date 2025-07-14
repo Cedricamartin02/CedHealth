@@ -217,11 +217,60 @@ def analyze_meal():
                            error_message=error_message)
 
 
-@app.route('/meals', methods=['GET'])
+@app.route('/meals', methods=['GET', 'POST'])
 def meals():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
+    nutrition_data = None
+    error_message = None
+
+    # Handle adding new meal
+    if request.method == 'POST' and request.form.get('action') == 'add_meal':
+        quantity = request.form.get('quantity')
+        unit = request.form.get('unit')
+        food_name = request.form.get('food_name')
+        
+        if quantity and unit and food_name:
+            # Combine quantity, unit, and food name for API query
+            meal_query = f"{quantity} {unit} {food_name}"
+            try:
+                response = requests.post(API_URL,
+                                         headers=HEADERS,
+                                         json={"query": meal_query})
+                data = response.json()
+                if 'foods' in data:
+                    food = data['foods'][0]
+                    nutrition_data = {
+                        'name': food['food_name'],
+                        'calories': food['nf_calories'],
+                        'protein': food['nf_protein'],
+                        'fat': food['nf_total_fat'],
+                        'carbs': food['nf_total_carbohydrate']
+                    }
+
+                    # Save to DB
+                    conn = sqlite3.connect('cedhealth.db')
+                    c = conn.cursor()
+                    c.execute(
+                        '''
+                        INSERT INTO meals (user_id, meal_name, calories, protein, fat, carbs, date)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ''',
+                        (session['user_id'], nutrition_data['name'],
+                         nutrition_data['calories'], nutrition_data['protein'],
+                         nutrition_data['fat'], nutrition_data['carbs'],
+                         datetime.now().date().isoformat()))
+                    conn.commit()
+                    conn.close()
+                else:
+                    error_message = "Nutrition data not found."
+            except Exception as e:
+                error_message = str(e)
+        else:
+            error_message = "Please enter quantity, unit, and food name."
+
+    # Get meals for display
     date_filter = request.args.get('date')
     user_id = session['user_id']
     conn = sqlite3.connect('cedhealth.db')
@@ -236,7 +285,9 @@ def meals():
 
     return render_template('meals.html',
                            meals=meals_by_user,
-                           selected_date=date_filter)
+                           selected_date=date_filter,
+                           nutrition_data=nutrition_data,
+                           error_message=error_message)
 
 
 @app.route('/delete_meal/<int:meal_id>', methods=['GET', 'POST'])
