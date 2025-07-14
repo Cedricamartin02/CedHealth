@@ -83,11 +83,11 @@
         .input-wrapper {
             position: relative;
             flex: 1;
-            min-width: 150px;
-            max-width: 250px;
+            min-width: 300px;
+            max-width: 400px;
         }
 
-        input[type="text"], input[type="number"] {
+        input[type="text"] {
             width: 100%;
             padding: 16px 20px;
             font-size: 16px;
@@ -98,7 +98,7 @@
             font-family: 'Inter', sans-serif;
         }
 
-        input[type="text"]:focus, input[type="number"]:focus {
+        input[type="text"]:focus {
             outline: none;
             border-color: #4f46e5;
             background: white;
@@ -272,13 +272,7 @@
                 <form method="POST" action="{{ url_for('analyze_meal') }}">
                     <div class="form-group">
                         <div class="input-wrapper">
-                            <input type="number" name="quantity" placeholder="Quantity (e.g., 2)" step="0.1" min="0.1" required>
-                        </div>
-                        <div class="input-wrapper">
-                            <input type="text" name="unit" placeholder="Unit (e.g., cups, oz, serving)" required>
-                        </div>
-                        <div class="input-wrapper">
-                            <input type="text" name="food_name" placeholder="Food name (e.g., chicken breast)" required>
+                            <input type="text" name="meal_name" placeholder="Enter your meal (e.g., grilled chicken salad)" required>
                         </div>
                         <button type="submit" class="btn">Analyze Meal</button>
                     </div>

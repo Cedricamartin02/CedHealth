@@ -46,7 +46,7 @@ def init_db():
             carbs REAL,
             date TEXT,
             quantity REAL,
-            unit TEXT,
+            unit REAL,
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     ''')
@@ -171,17 +171,12 @@ def analyze_meal():
     error_message = None
 
     if request.method == 'POST':
-        quantity = request.form.get('quantity')
-        unit = request.form.get('unit')
-        food_name = request.form.get('food_name')
-
-        if quantity and unit and food_name:
-            # Combine quantity, unit, and food name for API query
-            meal_query = f"{quantity} {unit} {food_name}"
+        meal_name = request.form.get('meal_name')
+        if meal_name:
             try:
                 response = requests.post(API_URL,
                                          headers=HEADERS,
-                                         json={"query": meal_query})
+                                         json={"query": meal_name})
                 data = response.json()
                 if 'foods' in data:
                     food = data['foods'][0]
@@ -198,13 +193,13 @@ def analyze_meal():
                     c = conn.cursor()
                     c.execute(
                         '''
-                        INSERT INTO meals (user_id, meal_name, calories, protein, fat, carbs, date, quantity, unit)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        INSERT INTO meals (user_id, meal_name, calories, protein, fat, carbs, date)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
                     ''',
                         (session['user_id'], nutrition_data['name'],
                          nutrition_data['calories'], nutrition_data['protein'],
                          nutrition_data['fat'], nutrition_data['carbs'],
-                         datetime.now().date().isoformat(), float(quantity), unit))
+                         datetime.now().date().isoformat()))
                     conn.commit()
                     conn.close()
                 else:
@@ -212,7 +207,7 @@ def analyze_meal():
             except Exception as e:
                 error_message = str(e)
         else:
-            error_message = "Please enter quantity, unit, and food name."
+            error_message = "Please enter a meal name."
 
     return render_template('analyze_meal.html',
                            nutrition_data=nutrition_data,
