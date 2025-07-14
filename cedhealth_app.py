@@ -64,6 +64,30 @@ def init_db():
         )
     ''')
     
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS saved_meals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            meal_name TEXT,
+            created_date TEXT,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+    
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS saved_meal_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            saved_meal_id INTEGER,
+            food_name TEXT,
+            quantity TEXT,
+            calories REAL,
+            protein REAL,
+            fat REAL,
+            carbs REAL,
+            FOREIGN KEY (saved_meal_id) REFERENCES saved_meals(id)
+        )
+    ''')
+    
     # Add columns if they don't exist (for existing databases)
     try:
         c.execute('ALTER TABLE meals ADD COLUMN quantity REAL')
@@ -429,6 +453,149 @@ def log_weight():
         conn.close()
 
     return redirect(url_for('dashboard'))
+
+
+@app.route('/create_meal', methods=['GET', 'POST'])
+def create_meal():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    error_message = None
+    success_message = None
+    
+    if request.method == 'POST':
+        meal_name = request.form.get('meal_name')
+        food_items = []
+        
+        # Get all food items from form
+        i = 0
+        while True:
+            food_name = request.form.get(f'food_name_{i}')
+            food_quantity = request.form.get(f'food_quantity_{i}')
+            if not food_name or not food_quantity:
+                break
+            food_items.append(f"{food_quantity} {food_name}")
+            i += 1
+        
+        if meal_name and food_items:
+            try:
+                conn = sqlite3.connect('cedhealth.db')
+                c = conn.cursor()
+                
+                # Create saved meal
+                c.execute('''
+                    INSERT INTO saved_meals (user_id, meal_name, created_date)
+                    VALUES (?, ?, ?)
+                ''', (session['user_id'], meal_name, datetime.now().date().isoformat()))
+                
+                saved_meal_id = c.lastrowid
+                
+                # Process each food item
+                for food_item in food_items:
+                    try:
+                        response = requests.post(API_URL,
+                                                 headers=HEADERS,
+                                                 json={"query": food_item})
+                        data = response.json()
+                        
+                        if 'foods' in data and data['foods']:
+                            food = data['foods'][0]
+                            
+                            # Save food item to saved_meal_items
+                            c.execute('''
+                                INSERT INTO saved_meal_items (saved_meal_id, food_name, quantity, calories, protein, fat, carbs)
+                                VALUES (?, ?, ?, ?, ?, ?, ?)
+                            ''', (saved_meal_id, food['food_name'], food_item,
+                                  food['nf_calories'], food['nf_protein'],
+                                  food['nf_total_fat'], food['nf_total_carbohydrate']))
+                        else:
+                            error_message = f"Nutrition data not found for: {food_item}"
+                            break
+                    except Exception as e:
+                        error_message = f"Error processing '{food_item}': {str(e)}"
+                        break
+                
+                if not error_message:
+                    conn.commit()
+                    success_message = f"Custom meal '{meal_name}' created successfully!"
+                else:
+                    # Delete the saved meal if there was an error
+                    c.execute('DELETE FROM saved_meals WHERE id = ?', (saved_meal_id,))
+                    conn.commit()
+                
+                conn.close()
+                
+            except Exception as e:
+                error_message = f"Error creating meal: {str(e)}"
+        else:
+            error_message = "Please enter a meal name and at least one food item."
+    
+    return render_template('create_meal.html', 
+                         error_message=error_message, 
+                         success_message=success_message)
+
+
+@app.route('/saved_meals')
+def saved_meals():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    conn = sqlite3.connect('cedhealth.db')
+    c = conn.cursor()
+    
+    # Get saved meals with their total nutrition
+    c.execute('''
+        SELECT sm.id, sm.meal_name, sm.created_date,
+               SUM(smi.calories) as total_calories,
+               SUM(smi.protein) as total_protein,
+               SUM(smi.fat) as total_fat,
+               SUM(smi.carbs) as total_carbs
+        FROM saved_meals sm
+        LEFT JOIN saved_meal_items smi ON sm.id = smi.saved_meal_id
+        WHERE sm.user_id = ?
+        GROUP BY sm.id, sm.meal_name, sm.created_date
+        ORDER BY sm.created_date DESC
+    ''', (session['user_id'],))
+    
+    saved_meals_data = c.fetchall()
+    conn.close()
+    
+    return render_template('saved_meals.html', saved_meals=saved_meals_data)
+
+
+@app.route('/log_saved_meal/<int:saved_meal_id>')
+def log_saved_meal(saved_meal_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    conn = sqlite3.connect('cedhealth.db')
+    c = conn.cursor()
+    
+    # Get saved meal items
+    c.execute('''
+        SELECT smi.food_name, smi.calories, smi.protein, smi.fat, smi.carbs
+        FROM saved_meal_items smi
+        JOIN saved_meals sm ON smi.saved_meal_id = sm.id
+        WHERE sm.id = ? AND sm.user_id = ?
+    ''', (saved_meal_id, session['user_id']))
+    
+    meal_items = c.fetchall()
+    
+    if meal_items:
+        current_date = datetime.now().date().isoformat()
+        
+        # Log each item as a separate meal entry
+        for item in meal_items:
+            food_name, calories, protein, fat, carbs = item
+            c.execute('''
+                INSERT INTO meals (user_id, meal_name, calories, protein, fat, carbs, date)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (session['user_id'], food_name, calories, protein, fat, carbs, current_date))
+        
+        conn.commit()
+    
+    conn.close()
+    return redirect(url_for('meals'))
 
 
 # ---------- RUN ----------

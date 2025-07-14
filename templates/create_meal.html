@@ -1,0 +1,110 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Custom Meal - CedHealth</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <h1>🏥 CedHealth</h1>
+            </div>
+            <div class="nav-links">
+                <a href="{{ url_for('dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('meals') }}">Meals</a>
+                <a href="{{ url_for('saved_meals') }}">Saved Meals</a>
+                <a href="{{ url_for('logout') }}">Logout</a>
+            </div>
+        </nav>
+
+        <div class="content">
+            <h2>Create Custom Meal</h2>
+            
+            {% if error_message %}
+                <div class="error">{{ error_message }}</div>
+            {% endif %}
+            
+            {% if success_message %}
+                <div class="success">{{ success_message }}</div>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('create_meal') }}">
+                <div class="form-group">
+                    <label for="meal_name">Meal Name:</label>
+                    <input type="text" id="meal_name" name="meal_name" placeholder="e.g., Grilled Chicken Plate" required>
+                </div>
+
+                <div id="food-items">
+                    <h3>Food Items:</h3>
+                    <div class="food-item">
+                        <input type="text" name="food_quantity_0" placeholder="e.g., 6 oz" required>
+                        <input type="text" name="food_name_0" placeholder="e.g., grilled chicken" required>
+                    </div>
+                    <div class="food-item">
+                        <input type="text" name="food_quantity_1" placeholder="e.g., 1 cup">
+                        <input type="text" name="food_name_1" placeholder="e.g., rice">
+                    </div>
+                    <div class="food-item">
+                        <input type="text" name="food_quantity_2" placeholder="e.g., 1 cup">
+                        <input type="text" name="food_name_2" placeholder="e.g., broccoli">
+                    </div>
+                </div>
+
+                <button type="button" onclick="addFoodItem()">Add Another Food Item</button>
+                <button type="submit" class="btn">Create Meal</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let foodItemCount = 3;
+        
+        function addFoodItem() {
+            const foodItemsDiv = document.getElementById('food-items');
+            const newItem = document.createElement('div');
+            newItem.className = 'food-item';
+            newItem.innerHTML = `
+                <input type="text" name="food_quantity_${foodItemCount}" placeholder="e.g., 1 cup">
+                <input type="text" name="food_name_${foodItemCount}" placeholder="e.g., food item">
+            `;
+            foodItemsDiv.appendChild(newItem);
+            foodItemCount++;
+        }
+    </script>
+
+    <style>
+        .food-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .food-item input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</body>
+</html>
