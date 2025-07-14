@@ -46,10 +46,21 @@ def init_db():
             carbs REAL,
             date TEXT,
             quantity REAL,
-            unit REAL,
+            unit TEXT,
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     ''')
+    
+    # Add columns if they don't exist (for existing databases)
+    try:
+        c.execute('ALTER TABLE meals ADD COLUMN quantity REAL')
+    except sqlite3.OperationalError:
+        pass  # Column already exists
+    
+    try:
+        c.execute('ALTER TABLE meals ADD COLUMN unit TEXT')
+    except sqlite3.OperationalError:
+        pass  # Column already exists
     conn.commit()
     conn.close()
 
