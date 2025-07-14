@@ -169,12 +169,17 @@ def analyze_meal():
     error_message = None
 
     if request.method == 'POST':
-        meal_name = request.form.get('meal_name')
-        if meal_name:
+        quantity = request.form.get('quantity')
+        unit = request.form.get('unit')
+        food_name = request.form.get('food_name')
+        
+        if quantity and unit and food_name:
+            # Combine quantity, unit, and food name for API query
+            meal_query = f"{quantity} {unit} {food_name}"
             try:
                 response = requests.post(API_URL,
                                          headers=HEADERS,
-                                         json={"query": meal_name})
+                                         json={"query": meal_query})
                 data = response.json()
                 if 'foods' in data:
                     food = data['foods'][0]
@@ -205,7 +210,7 @@ def analyze_meal():
             except Exception as e:
                 error_message = str(e)
         else:
-            error_message = "Please enter a meal name."
+            error_message = "Please enter quantity, unit, and food name."
 
     return render_template('analyze_meal.html',
                            nutrition_data=nutrition_data,
