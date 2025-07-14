@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Meal History - CedHealth</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h2>Your Logged Meals</h2>
+
+    {% if meals %}
+    <table border="1" cellpadding="8" cellspacing="0">
+        <tr>
+            <th>Date</th>
+            <th>Meal</th>
+            <th>Calories</th>
+            <th>Protein (g)</th>
+            <th>Carbs (g)</th>
+            <th>Fat (g)</th>
+            <th>Action</th>
+        </tr>
+        {% for meal in meals %}
+        <tr>
+            <td>{{ meal.date }}</td>
+            <td>{{ meal.meal }}</td>
+            <td>{{ meal.cal | round }}</td>
+            <td>{{ meal.protein | round(1) }}</td>
+            <td>{{ meal.carbs | round(1) }}</td>
+            <td>{{ meal.fat | round(1) }}</td>
+            <td>
+                <form action="/delete_meal/{{ meal.id }}" method="POST" style="display:inline;">
+                    <button type="submit" onclick="return confirm('Delete this meal?')">❌</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+        <p>No meals logged yet.</p>
+    {% endif %}
+
+    <a href="/dashboard">Back to Dashboard</a>
+</body>
+</html>

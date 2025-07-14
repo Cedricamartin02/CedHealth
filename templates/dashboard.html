@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - CedHealth</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background: linear-gradient(to bottom right, #1f2f36, #354750);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px;
+            color: #f4f4f4;
+        }
+
+        h2 {
+            font-size: 2.2em;
+            margin-bottom: 25px;
+            color: #ffffff;
+        }
+
+        .card {
+            background-color: #2a3b45;
+            border-radius: 20px;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.6);
+            padding: 30px 40px;
+            width: 400px;
+            text-align: center;
+            border: 2px solid #607d8b;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            margin: 15px 0;
+        }
+
+        a {
+            text-decoration: none;
+            color: #00e676;
+            font-weight: bold;
+            font-size: 1.15em;
+            transition: color 0.3s;
+        }
+
+        a:hover {
+            color: #76ff03;
+        }
+
+        .img-banner {
+            max-width: 150px;
+            margin-bottom: 25px;
+        }
+    </style>
+</head>
+<body>
+    <img src="https://cdn.pixabay.com/photo/2017/01/31/20/16/dinosaur-2022638_1280.png" class="img-banner" alt="Dino Icon">
+    <h2>Welcome, {{ username }}</h2>
+
+    <div class="card">
+        <ul>
+            <li><a href="/goals">🎯 Set/View Goals</a></li>
+            <li><a href="/meals">📅 View Meals by Date</a></li>
+            <li><a href="/analyze_meal">🧠 AI Meal Analyzer</a></li>
+            <li><a href="/meal_analyzer">📊 Meal History</a></li>
+            <li><a href="/bmi">⚖️ BMI Calculator</a></li>
+            <li><a href="/logout">🚪 Logout</a></li>
+        </ul>
+    </div>
+</body>
+</html>

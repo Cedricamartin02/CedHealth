@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Set/View Goals - CedHealth</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h2>Set Your Health Goals</h2>
+
+    <form method="POST">
+        Weight Goal (kg): <input type="number" name="weight_goal" value="{{ goals.weight_goal if goals else '' }}"><br><br>
+        Calorie Goal (kcal): <input type="number" name="calorie_goal" value="{{ goals.calorie_goal if goals else '' }}"><br><br>
+        <input type="submit" value="Save Goals">
+    </form>
+
+    <a href="/dashboard">Back to Dashboard</a>
+</body>
+</html>

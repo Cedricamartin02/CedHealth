@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Meal Analyzer - CedHealth</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f2f2f2;
+            text-align: center;
+            padding: 40px;
+        }
+        h1 {
+            color: #c0392b;
+            font-size: 32px;
+        }
+        form {
+            margin-bottom: 30px;
+        }
+        input[type="text"] {
+            padding: 10px;
+            width: 300px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        input[type="submit"] {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        table {
+            margin: 0 auto;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 12px 18px;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f7b731;
+            color: #000;
+        }
+        .error {
+            color: red;
+            margin-bottom: 20px;
+        }
+        .dino {
+            margin-top: 30px;
+            max-width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <h1>AI Meal Analyzer</h1>
+
+    {% if error_message %}
+        <div class="error">{{ error_message }}</div>
+    {% endif %}
+
+<form method="POST" action="{{ url_for('analyze_meal') }}">
+    <input type="text" name="meal_name" placeholder="Enter your meal" required>
+    <button type="submit">Analyze</button>
+</form>
+    {% if nutrition_data %}
+        <h2>Nutrition Info for "{{ nutrition_data.name }}"</h2>
+        <table>
+            <tr>
+                <th>Calories</th>
+                <th>Protein (g)</th>
+                <th>Fat (g)</th>
+                <th>Carbs (g)</th>
+            </tr>
+            <tr>
+                <td>{{ nutrition_data.calories }}</td>
+                <td>{{ nutrition_data.protein }}</td>
+                <td>{{ nutrition_data.fat }}</td>
+                <td>{{ nutrition_data.carbs }}</td>
+            </tr>
+        </table>
+    {% endif %}
+
+    <img src="/static/dino.png" alt="Manly Dino" class="dino">
+
+    <p><a href="/dashboard">⬅ Back to Dashboard</a></p>
+</body>
+</html>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Meal Analyzer - CedHealth</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f2f2f2;
+            text-align: center;
+            padding: 40px;
+        }
+        h1 {
+            color: #c0392b;
+            font-size: 32px;
+        }
+        form {
+            margin-bottom: 30px;
+        }
+        input[type="text"] {
+            padding: 10px;
+            width: 300px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        input[type="submit"] {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        table {
+            margin: 0 auto;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 12px 18px;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f7b731;
+            color: #000;
+        }
+        .error {
+            color: red;
+            margin-bottom: 20px;
+        }
+        .dino {
+            margin-top: 30px;
+            max-width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <h1>AI Meal Analyzer</h1>
+
+    {% if error_message %}
+        <div class="error">{{ error_message }}</div>
+    {% endif %}
+
+<form method="POST" action="{{ url_for('analyze_meal') }}">
+    <input type="text" name="meal_name" placeholder="Enter your meal" required>
+    <button type="submit">Analyze</button>
+</form>
+    {% if nutrition_data %}
+        <h2>Nutrition Info for "{{ nutrition_data.name }}"</h2>
+        <table>
+            <tr>
+                <th>Calories</th>
+                <th>Protein (g)</th>
+                <th>Fat (g)</th>
+                <th>Carbs (g)</th>
+            </tr>
+            <tr>
+                <td>{{ nutrition_data.calories }}</td>
+                <td>{{ nutrition_data.protein }}</td>
+                <td>{{ nutrition_data.fat }}</td>
+                <td>{{ nutrition_data.carbs }}</td>
+            </tr>
+        </table>
+    {% endif %}
+
+    <img src="/static/dino.png" alt="Manly Dino" class="dino">
+
+    <p><a href="/dashboard">⬅ Back to Dashboard</a></p>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Meals - CedHealth</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+<body>
+    <h2>Meals by Date</h2>
+<form method="POST" action="{{ url_for('delete_meal', meal_id=meal[0]) }}">
+    <button type="submit">Delete</button>
+</form>
+    <h3>Meal Log:</h3>
+    <ul>
+        {% for entry in meals %}
+        <li>{{ entry.date }} - {{ entry.meal }}</li>
+        {% endfor %}
+    </ul>
+    <a href="/dashboard">Back to Dashboard</a>
+</body>
+</html>

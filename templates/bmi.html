@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BMI Calculator - CedHealth</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>BMI Calculator</h2>
+        <form method="POST">
+            <label>Weight (kg):</label>
+            <input name="weight" type="number" step="0.1" required><br>
+
+            <label>Height (cm):</label>
+            <input name="height" type="number" step="0.1" required><br>
+
+            <input type="submit" value="Calculate BMI">
+        </form>
+
+        {% if result %}
+            {% if result.error %}
+                <p class="error">{{ result.error }}</p>
+            {% else %}
+                <div class="result">
+                    <h3>Your BMI: {{ result.bmi }}</h3>
+                    <p>Category: <strong>{{ result.category }}</strong></p>
+                </div>
+            {% endif %}
+        {% endif %}
+
+        <a href="/dashboard" class="btn">Back to Dashboard</a>
+    </div>
+</body>
+</html>
