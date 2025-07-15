@@ -178,17 +178,17 @@ def dashboard():
     c = conn.cursor()
 
     # Get user's goals
-    c.execute('SELECT weight_goal, calorie_goal FROM goals WHERE user_id = ?', (user_id,))
+    c.execute('SELECT weight_goal, calorie_goal, protein_goal, carbs_goal, fat_goal FROM goals WHERE user_id = ?', (user_id,))
     goal = c.fetchone()
-
-    # Get meal statistics
-    c.execute('SELECT COUNT(*) FROM meals WHERE user_id = ?', (user_id,))
-    total_meals = c.fetchone()[0]
-
-    # Calculate average daily calories
-    c.execute('SELECT AVG(calories) FROM meals WHERE user_id = ?', (user_id,))
-    avg_calories_result = c.fetchone()[0]
-    avg_daily_calories = int(avg_calories_result) if avg_calories_result else 0
+    
+    # Default values if no goals set
+    calorie_goal = goal[1] if goal else 2000
+    protein_goal = goal[2] if goal else 150
+    carbs_goal = goal[3] if goal else 250
+    fat_goal = goal[4] if goal else 65
+    
+    # Calculate fiber goal based on calorie goal (14g per 1000 calories)
+    fiber_goal = round((calorie_goal / 1000) * 14, 1)
 
     # Get daily calories for the past 7 days
     c.execute('''
@@ -211,15 +211,47 @@ def dashboard():
     ''', (user_id,))
     daily_weights = c.fetchall()
 
+    # Get today's nutrition totals
+    today = datetime.now().date().isoformat()
+    c.execute('''
+        SELECT SUM(protein), SUM(fat), SUM(carbs) 
+        FROM meals 
+        WHERE user_id = ? AND date = ?
+    ''', (user_id, today))
+    
+    nutrition_totals = c.fetchone()
+    current_protein = nutrition_totals[0] if nutrition_totals[0] else 0
+    current_fat = nutrition_totals[1] if nutrition_totals[1] else 0
+    current_carbs = nutrition_totals[2] if nutrition_totals[2] else 0
+    
+    # Calculate fiber (approximate: 3g per 100g carbs)
+    current_fiber = round((current_carbs / 100) * 3, 1)
+
+    # Calculate progress percentages
+    protein_progress = min(100, (current_protein / protein_goal) * 100) if protein_goal > 0 else 0
+    fat_progress = min(100, (current_fat / fat_goal) * 100) if fat_goal > 0 else 0
+    carbs_progress = min(100, (current_carbs / carbs_goal) * 100) if carbs_goal > 0 else 0
+    fiber_progress = min(100, (current_fiber / fiber_goal) * 100) if fiber_goal > 0 else 0
+
     conn.close()
 
     return render_template('dashboard.html', 
                          username=session['username'],
-                         goal=goal,
-                         total_meals=total_meals,
-                         avg_daily_calories=avg_daily_calories,
                          daily_calories=daily_calories,
-                         daily_weights=daily_weights)
+                         daily_weights=daily_weights,
+                         calorie_goal=calorie_goal,
+                         protein_goal=protein_goal,
+                         carbs_goal=carbs_goal,
+                         fat_goal=fat_goal,
+                         fiber_goal=fiber_goal,
+                         current_protein=round(current_protein, 1),
+                         current_fat=round(current_fat, 1),
+                         current_carbs=round(current_carbs, 1),
+                         current_fiber=current_fiber,
+                         protein_progress=round(protein_progress, 1),
+                         fat_progress=round(fat_progress, 1),
+                         carbs_progress=round(carbs_progress, 1),
+                         fiber_progress=round(fiber_progress, 1))
 
 
 @app.route('/logout')
