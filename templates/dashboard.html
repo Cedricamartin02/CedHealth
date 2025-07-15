@@ -433,10 +433,12 @@
                     <div class="card-body">
                         <canvas id="weightChart"></canvas>
                         <div class="weight-input-section">
+                            <h4 style="color: #ffffff; margin-bottom: 15px; font-size: 1rem; font-weight: 600;">Log Today's Weight</h4>
                             <form method="POST" action="/log_weight" class="weight-form">
                                 <div class="input-group">
-                                    <input type="number" name="weight" placeholder="Today's weight (kg)" step="0.1" required>
-                                    <button type="submit" class="btn btn-primary">Log Weight</button>
+                                    <input type="number" name="weight" placeholder="Enter weight (kg)" step="0.1" required 
+                                           style="background: rgba(31, 31, 31, 0.9); border: 2px solid rgba(220, 38, 38, 0.4); color: #ffffff; font-size: 0.9rem;">
+                                    <button type="submit" class="btn btn-primary" style="min-width: 120px;">Log Weight</button>
                                 </div>
                             </form>
                         </div>
