@@ -90,6 +90,30 @@ def init_db():
         )
     ''')
     
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS initial_goals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            weight REAL,
+            weight_unit TEXT,
+            height_cm INTEGER,
+            height_ft INTEGER,
+            height_in INTEGER,
+            height_unit TEXT,
+            target_weight REAL,
+            target_date TEXT,
+            goal_type TEXT,
+            current_workout_frequency INTEGER,
+            desired_workout_frequency INTEGER,
+            workout_types TEXT,
+            diet_preferences TEXT,
+            motivation TEXT,
+            tracking_preferences TEXT,
+            created_date TEXT,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+    
     # Add columns if they don't exist (for existing databases)
     try:
         c.execute('ALTER TABLE meals ADD COLUMN quantity REAL')
@@ -146,13 +170,24 @@ def login():
         c.execute('SELECT id FROM users WHERE username = ? AND password = ?',
                   (username, password))
         user = c.fetchone()
-        conn.close()
+        
         if user:
             session['user_id'] = user[0]
             session['username'] = username
-            return redirect(url_for('dashboard'))
+            
+            # Check if user has completed initial goals setup
+            c.execute('SELECT id FROM initial_goals WHERE user_id = ?', (user[0],))
+            initial_goals_complete = c.fetchone()
+            
+            conn.close()
+            
+            if not initial_goals_complete:
+                return redirect(url_for('initial_goals'))
+            else:
+                return redirect(url_for('dashboard'))
         else:
             error = 'Invalid username or password'
+            conn.close()
     return render_template('login.html', error=error)
 
 
@@ -167,12 +202,112 @@ def signup():
             c = conn.cursor()
             c.execute('INSERT INTO users (username, password) VALUES (?, ?)',
                       (username, password))
+            user_id = c.lastrowid
             conn.commit()
             conn.close()
-            return redirect(url_for('login'))
+            
+            # Auto-login and redirect to initial goals
+            session['user_id'] = user_id
+            session['username'] = username
+            return redirect(url_for('initial_goals'))
         except sqlite3.IntegrityError:
             error = 'Username already exists.'
     return render_template('signup.html', error=error)
+
+
+@app.route('/initial_goals', methods=['GET', 'POST'])
+def initial_goals():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    error = None
+    
+    if request.method == 'POST':
+        user_id = session['user_id']
+        
+        # Get form data
+        weight = request.form.get('weight', type=float)
+        weight_unit = request.form.get('weight_unit')
+        height_cm = request.form.get('height_cm', type=int)
+        height_ft = request.form.get('height_ft', type=int)
+        height_in = request.form.get('height_in', type=int)
+        height_unit = request.form.get('height_unit')
+        target_weight = request.form.get('target_weight', type=float)
+        target_date = request.form.get('target_date')
+        goal_type = request.form.get('goal_type')
+        current_workout_frequency = request.form.get('current_workout_frequency', type=int)
+        desired_workout_frequency = request.form.get('desired_workout_frequency', type=int)
+        
+        # Get multi-select values
+        workout_types = request.form.getlist('workout_types')
+        diet_preferences = request.form.getlist('diet_preferences')
+        tracking_preferences = request.form.getlist('tracking_preferences')
+        
+        motivation = request.form.get('motivation')
+        
+        # Basic validation
+        if not weight or not goal_type or current_workout_frequency is None or desired_workout_frequency is None:
+            error = 'Please fill in all required fields.'
+        else:
+            try:
+                conn = sqlite3.connect('cedhealth.db')
+                c = conn.cursor()
+                
+                # Save initial goals
+                c.execute('''
+                    INSERT INTO initial_goals (
+                        user_id, weight, weight_unit, height_cm, height_ft, height_in, 
+                        height_unit, target_weight, target_date, goal_type, 
+                        current_workout_frequency, desired_workout_frequency, 
+                        workout_types, diet_preferences, motivation, tracking_preferences, 
+                        created_date
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    user_id, weight, weight_unit, height_cm, height_ft, height_in,
+                    height_unit, target_weight, target_date, goal_type,
+                    current_workout_frequency, desired_workout_frequency,
+                    ','.join(workout_types), ','.join(diet_preferences),
+                    motivation, ','.join(tracking_preferences),
+                    datetime.now().date().isoformat()
+                ))
+                
+                # Calculate basic calorie and macro goals based on the input
+                # This is a simplified calculation - you can make it more sophisticated
+                base_calories = 2000  # Default starting point
+                
+                if goal_type == 'lose_weight':
+                    calorie_goal = base_calories - 300
+                    protein_goal = weight * 2.2 if weight_unit == 'kg' else weight * 1.0
+                elif goal_type == 'gain_weight':
+                    calorie_goal = base_calories + 300
+                    protein_goal = weight * 2.5 if weight_unit == 'kg' else weight * 1.1
+                else:  # maintain
+                    calorie_goal = base_calories
+                    protein_goal = weight * 2.0 if weight_unit == 'kg' else weight * 0.9
+                
+                # Set basic macro goals
+                carbs_goal = calorie_goal * 0.4 / 4  # 40% of calories from carbs
+                fat_goal = calorie_goal * 0.3 / 9    # 30% of calories from fat
+                
+                # Save to goals table
+                c.execute('''
+                    INSERT OR REPLACE INTO goals (
+                        user_id, weight_goal, calorie_goal, protein_goal, carbs_goal, fat_goal
+                    ) VALUES (?, ?, ?, ?, ?, ?)
+                ''', (
+                    user_id, target_weight or weight, int(calorie_goal), 
+                    round(protein_goal, 1), round(carbs_goal, 1), round(fat_goal, 1)
+                ))
+                
+                conn.commit()
+                conn.close()
+                
+                return redirect(url_for('dashboard'))
+                
+            except Exception as e:
+                error = f'Error saving goals: {str(e)}'
+    
+    return render_template('initial_goals.html', username=session['username'], error=error)
 
 
 @app.route('/dashboard')
