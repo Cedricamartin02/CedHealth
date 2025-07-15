@@ -236,30 +236,62 @@
             border-top: 1px solid rgba(220, 38, 38, 0.2);
         }
 
+        .weight-input-card {
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(127, 29, 29, 0.1) 100%);
+            border: 2px solid rgba(220, 38, 38, 0.3);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(220, 38, 38, 0.15);
+        }
+
+        .weight-input-card h4 {
+            color: #ffffff;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
+        }
+
         .weight-form .input-group {
             display: flex;
             gap: 15px;
+            justify-content: center;
+            align-items: center;
         }
 
-        .weight-form input {
+        .weight-input {
             flex: 1;
-            padding: 15px 20px;
-            border: 2px solid rgba(220, 38, 38, 0.3);
+            max-width: 200px;
+            padding: 16px 20px;
+            border: 2px solid rgba(220, 38, 38, 0.4);
             border-radius: 12px;
-            font-size: 0.9rem;
-            background: rgba(31, 31, 31, 0.8);
+            font-size: 1rem;
+            font-weight: 500;
+            background: rgba(31, 31, 31, 0.9);
             color: #ffffff;
             transition: all 0.3s ease;
+            text-align: center;
         }
 
-        .weight-form input:focus {
+        .weight-input:focus {
             outline: none;
             border-color: #dc2626;
-            box-shadow: 0 0 15px rgba(220, 38, 38, 0.3);
+            box-shadow: 0 0 20px rgba(220, 38, 38, 0.4);
+            background: rgba(31, 31, 31, 1);
         }
 
-        .weight-form input::placeholder {
-            color: rgba(220, 38, 38, 0.5);
+        .weight-input::placeholder {
+            color: rgba(220, 38, 38, 0.6);
+        }
+
+        .weight-save-btn {
+            min-width: 140px;
+            padding: 16px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         /* Macros Card */
@@ -393,6 +425,23 @@
             .progress-text .progress-value {
                 font-size: 1.2rem;
             }
+            
+            .weight-input-card {
+                padding: 20px;
+            }
+            
+            .weight-form .input-group {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .weight-input {
+                max-width: 100%;
+            }
+            
+            .weight-save-btn {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -433,14 +482,16 @@
                     <div class="card-body">
                         <canvas id="weightChart"></canvas>
                         <div class="weight-input-section">
-                            <h4 style="color: #ffffff; margin-bottom: 15px; font-size: 1rem; font-weight: 600;">Log Today's Weight</h4>
-                            <form method="POST" action="/log_weight" class="weight-form">
-                                <div class="input-group">
-                                    <input type="number" name="weight" placeholder="Enter weight (kg)" step="0.1" required 
-                                           style="background: rgba(31, 31, 31, 0.9); border: 2px solid rgba(220, 38, 38, 0.4); color: #ffffff; font-size: 0.9rem;">
-                                    <button type="submit" class="btn btn-primary" style="min-width: 120px;">Log Weight</button>
-                                </div>
-                            </form>
+                            <div class="weight-input-card">
+                                <h4>📊 Enter your weight for today</h4>
+                                <form method="POST" action="/log_weight" class="weight-form">
+                                    <div class="input-group">
+                                        <input type="number" name="weight" placeholder="Weight (kg)" step="0.1" required 
+                                               class="weight-input">
+                                        <button type="submit" class="btn btn-primary weight-save-btn">Save Weight</button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
