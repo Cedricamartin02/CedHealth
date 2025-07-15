@@ -22,7 +22,7 @@
         }
 
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
@@ -72,37 +72,129 @@
             margin-bottom: 40px;
         }
 
-        .form-group {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            align-items: center;
-            flex-wrap: wrap;
+        .food-items-container {
+            margin-bottom: 30px;
         }
 
-        .input-wrapper {
+        .food-item {
             position: relative;
-            flex: 1;
-            min-width: 300px;
-            max-width: 400px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
         }
 
-        input[type="text"] {
+        .food-item.first-item {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-color: #0ea5e9;
+        }
+
+        .search-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .search-input {
             width: 100%;
             padding: 16px 20px;
             font-size: 16px;
             border: 2px solid #e5e7eb;
             border-radius: 12px;
-            background: #f9fafb;
+            background: white;
             transition: all 0.3s ease;
             font-family: 'Inter', sans-serif;
         }
 
-        input[type="text"]:focus {
+        .search-input:focus {
             outline: none;
             border-color: #4f46e5;
-            background: white;
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .dropdown-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background-color 0.2s ease;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f8fafc;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item .food-name {
+            font-weight: 500;
+            color: #1f2937;
+        }
+
+        .dropdown-item .brand-name {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .remove-item {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .remove-item:hover {
+            background: #dc2626;
+            transform: scale(1.1);
+        }
+
+        .add-item-btn {
+            width: 100%;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .add-item-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
         }
 
         .btn {
@@ -117,7 +209,7 @@
             transition: all 0.3s ease;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            min-width: 120px;
+            width: 100%;
         }
 
         .btn:hover {
@@ -162,15 +254,57 @@
             margin-bottom: 8px;
         }
 
-        .meal-name {
+        .individual-items {
+            margin-bottom: 30px;
+        }
+
+        .individual-item {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .item-name {
+            font-weight: 600;
             color: #4f46e5;
-            font-weight: 500;
             font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .item-nutrition {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+        }
+
+        .nutrition-stat {
+            text-align: center;
+        }
+
+        .nutrition-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .nutrition-label {
+            font-size: 0.8rem;
+            color: #64748b;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .totals-section {
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
         }
 
         .nutrition-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 20px;
             margin-top: 20px;
         }
@@ -184,14 +318,14 @@
             border: 1px solid #f1f5f9;
         }
 
-        .nutrition-value {
+        .nutrition-item .nutrition-value {
             font-size: 2rem;
             font-weight: 700;
             color: #0f172a;
             margin-bottom: 5px;
         }
 
-        .nutrition-label {
+        .nutrition-item .nutrition-label {
             font-size: 0.9rem;
             color: #64748b;
             font-weight: 500;
@@ -218,13 +352,6 @@
             color: #7c3aed;
         }
 
-        .icon {
-            width: 24px;
-            height: 24px;
-            margin-right: 8px;
-            vertical-align: middle;
-        }
-
         @media (max-width: 768px) {
             .container {
                 margin: 10px;
@@ -243,13 +370,12 @@
                 padding: 30px 20px;
             }
             
-            .form-group {
-                flex-direction: column;
+            .item-nutrition {
+                grid-template-columns: repeat(2, 1fr);
             }
             
-            .input-wrapper {
-                min-width: auto;
-                max-width: none;
+            .nutrition-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
@@ -257,8 +383,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🧠 AI Meal Analyzer</h1>
-            <p>Get instant nutrition insights powered by AI</p>
+            <h1>🧠 Smart Meal Analyzer</h1>
+            <p>Intelligent meal analysis with autocomplete search</p>
         </div>
 
         <div class="content">
@@ -269,13 +395,26 @@
             {% endif %}
 
             <div class="form-section">
-                <form method="POST" action="{{ url_for('analyze_meal') }}">
-                    <div class="form-group">
-                        <div class="input-wrapper">
-                            <input type="text" name="meal_query" placeholder="Enter multiple foods separated by commas (e.g., 2 eggs, 1 slice toast, 1 cup orange juice)" required>
+                <form method="POST" action="{{ url_for('analyze_meal') }}" id="mealForm">
+                    <div class="food-items-container" id="foodItemsContainer">
+                        <div class="food-item first-item">
+                            <div class="search-wrapper">
+                                <input type="text" 
+                                       class="search-input" 
+                                       name="food_item_0" 
+                                       placeholder="Start typing a food name (e.g., protein shake, banana, etc.)" 
+                                       autocomplete="off"
+                                       required>
+                                <div class="dropdown"></div>
+                            </div>
                         </div>
-                        <button type="submit" class="btn">Analyze Meal</button>
                     </div>
+                    
+                    <button type="button" class="add-item-btn" onclick="addFoodItem()">
+                        + Add Another Item
+                    </button>
+                    
+                    <button type="submit" class="btn">Analyze Complete Meal</button>
                 </form>
             </div>
 
@@ -283,25 +422,42 @@
                 <div class="results-section">
                     <div class="results-card">
                         <div class="results-header">
-                            <h2>Nutrition Analysis</h2>
-                            <div class="meal-name">{{ nutrition_data|length }} food item(s) analyzed</div>
+                            <h2>Meal Analysis Results</h2>
+                            <p style="color: #6b7280;">{{ nutrition_data|length }} item(s) analyzed</p>
                         </div>
                         
-                        <!-- Individual Food Items -->
-                        {% for food in nutrition_data %}
-                            <div style="margin-bottom: 20px; padding: 15px; background: rgba(255, 255, 255, 0.7); border-radius: 8px;">
-                                <h4 style="margin-bottom: 10px; color: #4f46e5;">{{ food.name }}</h4>
-                                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                                    <span><strong>{{ "%.0f"|format(food.calories) }}</strong> cal</span>
-                                    <span><strong>{{ "%.1f"|format(food.protein) }}g</strong> protein</span>
-                                    <span><strong>{{ "%.1f"|format(food.fat) }}g</strong> fat</span>
-                                    <span><strong>{{ "%.1f"|format(food.carbs) }}g</strong> carbs</span>
+                        <div class="individual-items">
+                            <h3 style="margin-bottom: 20px; color: #0f172a;">Individual Items:</h3>
+                            {% for food in nutrition_data %}
+                                <div class="individual-item">
+                                    <div class="item-name">{{ food.name }}</div>
+                                    <div class="item-nutrition">
+                                        <div class="nutrition-stat">
+                                            <div class="nutrition-value">{{ "%.0f"|format(food.calories) }}</div>
+                                            <div class="nutrition-label">Calories</div>
+                                        </div>
+                                        <div class="nutrition-stat">
+                                            <div class="nutrition-value">{{ "%.1f"|format(food.protein) }}g</div>
+                                            <div class="nutrition-label">Protein</div>
+                                        </div>
+                                        <div class="nutrition-stat">
+                                            <div class="nutrition-value">{{ "%.1f"|format(food.fat) }}g</div>
+                                            <div class="nutrition-label">Fat</div>
+                                        </div>
+                                        <div class="nutrition-stat">
+                                            <div class="nutrition-value">{{ "%.1f"|format(food.carbs) }}g</div>
+                                            <div class="nutrition-label">Carbs</div>
+                                        </div>
+                                        <div class="nutrition-stat">
+                                            <div class="nutrition-value">{{ "%.1f"|format(food.fiber) }}g</div>
+                                            <div class="nutrition-label">Fiber</div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        {% endfor %}
+                            {% endfor %}
+                        </div>
                         
-                        <!-- Total Nutrition -->
-                        <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
+                        <div class="totals-section">
                             <h3 style="text-align: center; margin-bottom: 15px; color: #0f172a;">Total Nutrition</h3>
                             <div class="nutrition-grid">
                                 <div class="nutrition-item">
@@ -320,6 +476,10 @@
                                     <div class="nutrition-value">{{ "%.1f"|format(total_nutrition.carbs) }}g</div>
                                     <div class="nutrition-label">Carbs</div>
                                 </div>
+                                <div class="nutrition-item">
+                                    <div class="nutrition-value">{{ "%.1f"|format(total_nutrition.fiber) }}g</div>
+                                    <div class="nutrition-label">Fiber</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -331,5 +491,136 @@
             </div>
         </div>
     </div>
+
+    <script>
+        let itemCounter = 1;
+        let searchTimeout;
+
+        function addFoodItem() {
+            const container = document.getElementById('foodItemsContainer');
+            const newItem = document.createElement('div');
+            newItem.className = 'food-item';
+            newItem.innerHTML = `
+                <button type="button" class="remove-item" onclick="removeFoodItem(this)">×</button>
+                <div class="search-wrapper">
+                    <input type="text" 
+                           class="search-input" 
+                           name="food_item_${itemCounter}" 
+                           placeholder="Enter food name or quantity + food (e.g., 1 cup almond milk)" 
+                           autocomplete="off"
+                           required>
+                    <div class="dropdown"></div>
+                </div>
+            `;
+            container.appendChild(newItem);
+            setupSearchListener(newItem.querySelector('.search-input'));
+            itemCounter++;
+        }
+
+        function removeFoodItem(button) {
+            const item = button.parentElement;
+            item.remove();
+        }
+
+        function setupSearchListener(input) {
+            const dropdown = input.nextElementSibling;
+
+            input.addEventListener('input', function() {
+                const query = this.value.trim();
+                
+                clearTimeout(searchTimeout);
+                
+                if (query.length < 2) {
+                    dropdown.style.display = 'none';
+                    return;
+                }
+
+                searchTimeout = setTimeout(() => {
+                    fetch(`/search_foods?q=${encodeURIComponent(query)}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.error) {
+                                console.error('Search error:', data.error);
+                                return;
+                            }
+
+                            dropdown.innerHTML = '';
+                            
+                            // Add common foods
+                            if (data.common && data.common.length > 0) {
+                                data.common.forEach(item => {
+                                    const div = document.createElement('div');
+                                    div.className = 'dropdown-item';
+                                    div.innerHTML = `
+                                        <div class="food-name">${item.food_name}</div>
+                                        <div class="brand-name">Common Food</div>
+                                    `;
+                                    div.addEventListener('click', () => {
+                                        input.value = item.food_name;
+                                        dropdown.style.display = 'none';
+                                    });
+                                    dropdown.appendChild(div);
+                                });
+                            }
+
+                            // Add branded foods
+                            if (data.branded && data.branded.length > 0) {
+                                data.branded.forEach(item => {
+                                    const div = document.createElement('div');
+                                    div.className = 'dropdown-item';
+                                    div.innerHTML = `
+                                        <div class="food-name">${item.food_name}</div>
+                                        <div class="brand-name">${item.brand_name}</div>
+                                    `;
+                                    div.addEventListener('click', () => {
+                                        input.value = item.food_name;
+                                        dropdown.style.display = 'none';
+                                    });
+                                    dropdown.appendChild(div);
+                                });
+                            }
+
+                            if (dropdown.children.length > 0) {
+                                dropdown.style.display = 'block';
+                            } else {
+                                dropdown.style.display = 'none';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Search error:', error);
+                            dropdown.style.display = 'none';
+                        });
+                }, 300);
+            });
+
+            input.addEventListener('blur', function() {
+                // Delay hiding dropdown to allow clicks
+                setTimeout(() => {
+                    dropdown.style.display = 'none';
+                }, 150);
+            });
+
+            input.addEventListener('focus', function() {
+                if (dropdown.children.length > 0) {
+                    dropdown.style.display = 'block';
+                }
+            });
+        }
+
+        // Initialize search listener for the first input
+        document.addEventListener('DOMContentLoaded', function() {
+            const firstInput = document.querySelector('.search-input');
+            setupSearchListener(firstInput);
+
+            // Hide dropdowns when clicking elsewhere
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.search-wrapper')) {
+                    document.querySelectorAll('.dropdown').forEach(dropdown => {
+                        dropdown.style.display = 'none';
+                    });
+                }
+            });
+        });
+    </script>
 </body>
 </html>

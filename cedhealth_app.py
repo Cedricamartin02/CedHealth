@@ -8,6 +8,7 @@ app.secret_key = 'your_secret_key_here'
 
 # Nutritionix API Keys
 API_URL = "https://trackapi.nutritionix.com/v2/natural/nutrients"
+SEARCH_URL = "https://trackapi.nutritionix.com/v2/search/instant"
 HEADERS = {
     "x-app-id": "3486324a",
     "x-app-key": "6ecc62cc99ad39d61f1669bf4ea005ee",
@@ -50,6 +51,7 @@ def init_db():
             date TEXT,
             quantity REAL,
             unit TEXT,
+            meal_session_id TEXT,
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     ''')
@@ -96,6 +98,11 @@ def init_db():
     
     try:
         c.execute('ALTER TABLE meals ADD COLUMN unit TEXT')
+    except sqlite3.OperationalError:
+        pass  # Column already exists
+    
+    try:
+        c.execute('ALTER TABLE meals ADD COLUMN meal_session_id TEXT')
     except sqlite3.OperationalError:
         pass  # Column already exists
     
@@ -285,6 +292,48 @@ def goals():
     return render_template('goals.html', goal=goal)
 
 
+@app.route('/search_foods')
+def search_foods():
+    if 'user_id' not in session:
+        return {'error': 'Not authenticated'}, 401
+    
+    query = request.args.get('q', '').strip()
+    if not query:
+        return {'common': [], 'branded': []}
+    
+    try:
+        response = requests.get(SEARCH_URL, 
+                               headers=HEADERS, 
+                               params={'query': query})
+        data = response.json()
+        
+        # Format the response for frontend
+        result = {
+            'common': [],
+            'branded': []
+        }
+        
+        if 'common' in data:
+            for item in data['common'][:5]:  # Limit to 5 items
+                result['common'].append({
+                    'food_name': item['food_name'],
+                    'tag_name': item.get('tag_name', ''),
+                    'photo': item.get('photo', {}).get('thumb', '')
+                })
+        
+        if 'branded' in data:
+            for item in data['branded'][:5]:  # Limit to 5 items
+                result['branded'].append({
+                    'food_name': item['food_name'],
+                    'brand_name': item.get('brand_name', ''),
+                    'photo': item.get('photo', {}).get('thumb', '')
+                })
+        
+        return result
+    except Exception as e:
+        return {'error': str(e)}, 500
+
+
 @app.route('/analyze_meal', methods=['GET', 'POST'])
 def analyze_meal():
     if 'user_id' not in session:
@@ -292,68 +341,76 @@ def analyze_meal():
 
     nutrition_data = []
     error_message = None
-    total_nutrition = {'calories': 0, 'protein': 0, 'fat': 0, 'carbs': 0}
+    total_nutrition = {'calories': 0, 'protein': 0, 'fat': 0, 'carbs': 0, 'fiber': 0}
 
     if request.method == 'POST':
-        meal_query = request.form.get('meal_query')
-        if meal_query:
-            # Split the query by commas and clean up each item
-            food_items = [item.strip() for item in meal_query.split(',') if item.strip()]
+        # Get all food items from the form
+        food_items = []
+        i = 0
+        while True:
+            food_item = request.form.get(f'food_item_{i}')
+            if not food_item:
+                break
+            food_items.append(food_item.strip())
+            i += 1
+        
+        if food_items:
+            # Create a combined query for all items
+            combined_query = ', '.join(food_items)
             
-            if food_items:
-                conn = sqlite3.connect('cedhealth.db')
-                c = conn.cursor()
-                current_date = datetime.now().date().isoformat()
+            try:
+                response = requests.post(API_URL,
+                                         headers=HEADERS,
+                                         json={"query": combined_query})
+                data = response.json()
                 
-                for food_item in food_items:
-                    try:
-                        response = requests.post(API_URL,
-                                                 headers=HEADERS,
-                                                 json={"query": food_item})
-                        data = response.json()
+                if 'foods' in data and data['foods']:
+                    conn = sqlite3.connect('cedhealth.db')
+                    c = conn.cursor()
+                    current_date = datetime.now().date().isoformat()
+                    
+                    # Generate a unique meal session ID
+                    import uuid
+                    meal_session_id = str(uuid.uuid4())
+                    
+                    for food in data['foods']:
+                        food_nutrition = {
+                            'name': food['food_name'],
+                            'calories': food['nf_calories'],
+                            'protein': food['nf_protein'],
+                            'fat': food['nf_total_fat'],
+                            'carbs': food['nf_total_carbohydrate'],
+                            'fiber': food.get('nf_dietary_fiber', 0)
+                        }
                         
-                        if 'foods' in data and data['foods']:
-                            food = data['foods'][0]
-                            food_nutrition = {
-                                'name': food['food_name'],
-                                'calories': food['nf_calories'],
-                                'protein': food['nf_protein'],
-                                'fat': food['nf_total_fat'],
-                                'carbs': food['nf_total_carbohydrate']
-                            }
-                            
-                            nutrition_data.append(food_nutrition)
-                            
-                            # Add to totals
-                            total_nutrition['calories'] += food_nutrition['calories']
-                            total_nutrition['protein'] += food_nutrition['protein']
-                            total_nutrition['fat'] += food_nutrition['fat']
-                            total_nutrition['carbs'] += food_nutrition['carbs']
+                        nutrition_data.append(food_nutrition)
+                        
+                        # Add to totals
+                        total_nutrition['calories'] += food_nutrition['calories']
+                        total_nutrition['protein'] += food_nutrition['protein']
+                        total_nutrition['fat'] += food_nutrition['fat']
+                        total_nutrition['carbs'] += food_nutrition['carbs']
+                        total_nutrition['fiber'] += food_nutrition['fiber']
 
-                            # Save to DB
-                            c.execute(
-                                '''
-                                INSERT INTO meals (user_id, meal_name, calories, protein, fat, carbs, date)
-                                VALUES (?, ?, ?, ?, ?, ?, ?)
-                            ''',
-                                (session['user_id'], food_nutrition['name'],
-                                 food_nutrition['calories'], food_nutrition['protein'],
-                                 food_nutrition['fat'], food_nutrition['carbs'],
-                                 current_date))
-                        else:
-                            error_message = f"Nutrition data not found for: {food_item}"
-                            break
-                    except Exception as e:
-                        error_message = f"Error processing '{food_item}': {str(e)}"
-                        break
-                
-                if not error_message:
+                        # Save to DB with meal session ID
+                        c.execute(
+                            '''
+                            INSERT INTO meals (user_id, meal_name, calories, protein, fat, carbs, date, meal_session_id)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        ''',
+                            (session['user_id'], food_nutrition['name'],
+                             food_nutrition['calories'], food_nutrition['protein'],
+                             food_nutrition['fat'], food_nutrition['carbs'],
+                             current_date, meal_session_id))
+                    
                     conn.commit()
-                conn.close()
-            else:
-                error_message = "Please enter at least one food item."
+                    conn.close()
+                else:
+                    error_message = "Nutrition data not found for the provided items."
+            except Exception as e:
+                error_message = f"Error processing meal: {str(e)}"
         else:
-            error_message = "Please enter food items separated by commas."
+            error_message = "Please add at least one food item."
 
     return render_template('analyze_meal.html',
                            nutrition_data=nutrition_data,
