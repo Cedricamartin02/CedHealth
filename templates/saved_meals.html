@@ -45,6 +45,10 @@
             {% else %}
                 <p>No saved meals yet. <a href="{{ url_for('create_meal') }}">Create your first custom meal!</a></p>
             {% endif %}
+            
+            <div class="back-link">
+                <a href="/dashboard">← Return to Dashboard</a>
+            </div>
         </div>
     </div>
 
@@ -95,6 +99,25 @@
         
         .btn:hover {
             background-color: #2980b9;
+        }
+        
+        .back-link {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .back-link a {
+            color: #4f46e5;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .back-link a:hover {
+            color: #7c3aed;
         }
     </style>
 </body>

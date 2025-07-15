@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -23,11 +22,11 @@
 
         <div class="content">
             <h2>Create Custom Meal</h2>
-            
+
             {% if error_message %}
                 <div class="error">{{ error_message }}</div>
             {% endif %}
-            
+
             {% if success_message %}
                 <div class="success">{{ success_message }}</div>
             {% endif %}
@@ -57,12 +56,16 @@
                 <button type="button" onclick="addFoodItem()">Add Another Food Item</button>
                 <button type="submit" class="btn">Create Meal</button>
             </form>
+
+            <div class="back-link">
+                <a href="{{ url_for('dashboard') }}">Return to Dashboard</a>
+            </div>
         </div>
     </div>
 
     <script>
         let foodItemCount = 3;
-        
+
         function addFoodItem() {
             const foodItemsDiv = document.getElementById('food-items');
             const newItem = document.createElement('div');
@@ -82,14 +85,14 @@
             gap: 10px;
             margin-bottom: 10px;
         }
-        
+
         .food-item input {
             flex: 1;
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
         }
-        
+
         .success {
             background-color: #d4edda;
             color: #155724;
@@ -97,13 +100,47 @@
             border-radius: 4px;
             margin-bottom: 20px;
         }
-        
+
         .error {
             background-color: #f8d7da;
             color: #721c24;
             padding: 10px;
             border-radius: 4px;
             margin-bottom: 20px;
+        }
+
+        .btn {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #2980b9;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .back-link a {
+            color: #4f46e5;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .back-link a:hover {
+            color: #7c3aed;
         }
     </style>
 </body>
