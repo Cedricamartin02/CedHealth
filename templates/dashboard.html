@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,8 +6,395 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - CedHealth</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #000;
+            color: #ffffff;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(220, 38, 38, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(127, 29, 29, 0.1) 0%, transparent 50%),
+                url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><text y="50" font-size="40" fill="rgba(127,29,29,0.05)">🦕</text><text x="100" y="150" font-size="30" fill="rgba(127,29,29,0.05)">🦖</text></svg>');
+            background-size: 100% 100%, 100% 100%, 200px 200px;
+            z-index: -1;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { background-position: 0% 0%, 0% 0%, 0px 0px; }
+            100% { background-position: 0% 0%, 0% 0%, 200px 200px; }
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            background: rgba(20, 20, 20, 0.95);
+            border-bottom: 2px solid rgba(220, 38, 38, 0.3);
+            box-shadow: 0 0 30px rgba(220, 38, 38, 0.2);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 80px;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            color: #dc2626;
+            font-size: 2rem;
+        }
+
+        .logo-text {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
+        }
+
+        .greeting {
+            font-size: 1.1rem;
+            color: rgba(220, 38, 38, 0.8);
+            font-weight: 500;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 10px 20px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .nav-link:hover {
+            color: #dc2626;
+            background: rgba(220, 38, 38, 0.1);
+            border-color: rgba(220, 38, 38, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #dc2626;
+            border: 2px solid #dc2626;
+        }
+
+        .btn-outline:hover {
+            background: #dc2626;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(220, 38, 38, 0.3);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(220, 38, 38, 0.3);
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 30px;
+        }
+
+        .dashboard-container {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        /* Cards */
+        .card {
+            background: rgba(20, 20, 20, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(220, 38, 38, 0.2);
+            border: 2px solid rgba(220, 38, 38, 0.3);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .card-header {
+            padding: 30px 30px 20px;
+            border-bottom: 1px solid rgba(220, 38, 38, 0.2);
+        }
+
+        .card-header h2,
+        .card-header h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
+        }
+
+        .card-subtitle {
+            color: rgba(220, 38, 38, 0.8);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .card-body {
+            padding: 30px;
+        }
+
+        /* Charts Section */
+        .charts-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .chart-card .card-body {
+            height: 350px;
+            position: relative;
+        }
+
+        .chart-card canvas {
+            max-height: 280px !important;
+        }
+
+        /* Weight Input */
+        .weight-input-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(220, 38, 38, 0.2);
+        }
+
+        .weight-form .input-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .weight-form input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid rgba(220, 38, 38, 0.3);
+            border-radius: 12px;
+            font-size: 0.9rem;
+            background: rgba(31, 31, 31, 0.8);
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .weight-form input:focus {
+            outline: none;
+            border-color: #dc2626;
+            box-shadow: 0 0 15px rgba(220, 38, 38, 0.3);
+        }
+
+        .weight-form input::placeholder {
+            color: rgba(220, 38, 38, 0.5);
+        }
+
+        /* Macros Card */
+        .macros-card {
+            width: 100%;
+        }
+
+        .macros-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            justify-items: center;
+        }
+
+        .macro-item {
+            text-align: center;
+        }
+
+        .progress-circle {
+            position: relative;
+            display: inline-block;
+        }
+
+        .progress-circle svg {
+            transform: rotate(-90deg);
+            filter: drop-shadow(0 0 10px rgba(220, 38, 38, 0.3));
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .progress-value {
+            display: block;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
+        }
+
+        .progress-label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #dc2626;
+            margin: 4px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .progress-goal {
+            display: block;
+            font-size: 0.8rem;
+            color: rgba(220, 38, 38, 0.6);
+        }
+
+        .progress-bar {
+            transition: stroke-dashoffset 1.5s ease-in-out;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-container {
+                padding: 0 20px;
+                height: auto;
+                min-height: 80px;
+                flex-direction: column;
+                gap: 20px;
+                padding-top: 20px;
+                padding-bottom: 20px;
+            }
+            
+            .nav-left {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 15px;
+            }
+            
+            .main-container {
+                padding: 30px 20px;
+            }
+            
+            .charts-section {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            
+            .macros-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+            
+            .weight-form .input-group {
+                flex-direction: column;
+            }
+            
+            .card-header,
+            .card-body {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo-text {
+                font-size: 1.5rem;
+            }
+            
+            .greeting {
+                font-size: 1rem;
+            }
+            
+            .macros-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .progress-circle svg {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .progress-text .progress-value {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Navigation Bar -->
@@ -14,11 +402,7 @@
         <div class="nav-container">
             <div class="nav-left">
                 <div class="logo">
-                    <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 2L2 7v10c0 5.55 3.84 10 9 11 1.16.21 2.76.21 3.5.21.74 0 2.34 0 3.5-.21 5.16-1 9-5.45 9-11V7l-10-5z"/>
-                        <path d="M8 12h8"/>
-                        <path d="M12 8v8"/>
-                    </svg>
+                    <div class="logo-icon">🏥</div>
                     <span class="logo-text">CedHealth</span>
                 </div>
                 <div class="greeting">Welcome, {{ username }}</div>
@@ -80,10 +464,10 @@
                     <div class="macros-grid">
                         <div class="macro-item">
                             <div class="progress-circle" data-progress="{{ protein_progress }}">
-                                <svg width="120" height="120">
-                                    <circle cx="60" cy="60" r="45" stroke="#e5e7eb" stroke-width="8" fill="none"/>
-                                    <circle cx="60" cy="60" r="45" stroke="#3b82f6" stroke-width="8" fill="none" 
-                                            stroke-dasharray="283" stroke-dashoffset="283" class="progress-bar" id="protein-progress"/>
+                                <svg width="140" height="140">
+                                    <circle cx="70" cy="70" r="55" stroke="rgba(220, 38, 38, 0.2)" stroke-width="8" fill="none"/>
+                                    <circle cx="70" cy="70" r="55" stroke="#dc2626" stroke-width="8" fill="none" 
+                                            stroke-dasharray="345" stroke-dashoffset="345" class="progress-bar" id="protein-progress"/>
                                 </svg>
                                 <div class="progress-text">
                                     <span class="progress-value">{{ current_protein }}g</span>
@@ -95,10 +479,10 @@
 
                         <div class="macro-item">
                             <div class="progress-circle" data-progress="{{ carbs_progress }}">
-                                <svg width="120" height="120">
-                                    <circle cx="60" cy="60" r="45" stroke="#e5e7eb" stroke-width="8" fill="none"/>
-                                    <circle cx="60" cy="60" r="45" stroke="#10b981" stroke-width="8" fill="none" 
-                                            stroke-dasharray="283" stroke-dashoffset="283" class="progress-bar" id="carbs-progress"/>
+                                <svg width="140" height="140">
+                                    <circle cx="70" cy="70" r="55" stroke="rgba(220, 38, 38, 0.2)" stroke-width="8" fill="none"/>
+                                    <circle cx="70" cy="70" r="55" stroke="#f59e0b" stroke-width="8" fill="none" 
+                                            stroke-dasharray="345" stroke-dashoffset="345" class="progress-bar" id="carbs-progress"/>
                                 </svg>
                                 <div class="progress-text">
                                     <span class="progress-value">{{ current_carbs }}g</span>
@@ -110,10 +494,10 @@
 
                         <div class="macro-item">
                             <div class="progress-circle" data-progress="{{ fat_progress }}">
-                                <svg width="120" height="120">
-                                    <circle cx="60" cy="60" r="45" stroke="#e5e7eb" stroke-width="8" fill="none"/>
-                                    <circle cx="60" cy="60" r="45" stroke="#f59e0b" stroke-width="8" fill="none" 
-                                            stroke-dasharray="283" stroke-dashoffset="283" class="progress-bar" id="fat-progress"/>
+                                <svg width="140" height="140">
+                                    <circle cx="70" cy="70" r="55" stroke="rgba(220, 38, 38, 0.2)" stroke-width="8" fill="none"/>
+                                    <circle cx="70" cy="70" r="55" stroke="#10b981" stroke-width="8" fill="none" 
+                                            stroke-dasharray="345" stroke-dashoffset="345" class="progress-bar" id="fat-progress"/>
                                 </svg>
                                 <div class="progress-text">
                                     <span class="progress-value">{{ current_fat }}g</span>
@@ -125,10 +509,10 @@
 
                         <div class="macro-item">
                             <div class="progress-circle" data-progress="{{ fiber_progress }}">
-                                <svg width="120" height="120">
-                                    <circle cx="60" cy="60" r="45" stroke="#e5e7eb" stroke-width="8" fill="none"/>
-                                    <circle cx="60" cy="60" r="45" stroke="#8b5cf6" stroke-width="8" fill="none" 
-                                            stroke-dasharray="283" stroke-dashoffset="283" class="progress-bar" id="fiber-progress"/>
+                                <svg width="140" height="140">
+                                    <circle cx="70" cy="70" r="55" stroke="rgba(220, 38, 38, 0.2)" stroke-width="8" fill="none"/>
+                                    <circle cx="70" cy="70" r="55" stroke="#8b5cf6" stroke-width="8" fill="none" 
+                                            stroke-dasharray="345" stroke-dashoffset="345" class="progress-bar" id="fiber-progress"/>
                                 </svg>
                                 <div class="progress-text">
                                     <span class="progress-value">{{ current_fiber }}g</span>
@@ -147,7 +531,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Chart.js default configuration
             Chart.defaults.font.family = 'Inter';
-            Chart.defaults.color = '#6b7280';
+            Chart.defaults.color = '#ffffff';
 
             // Weight chart data
             const weightData = {{ daily_weights | tojson }};
@@ -192,16 +576,16 @@
                     datasets: [{
                         label: 'Weight (kg)',
                         data: processedWeightData,
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderColor: '#dc2626',
+                        backgroundColor: 'rgba(220, 38, 38, 0.1)',
                         borderWidth: 3,
                         fill: true,
                         tension: 0.4,
                         spanGaps: true,
-                        pointBackgroundColor: '#3b82f6',
+                        pointBackgroundColor: '#dc2626',
                         pointBorderColor: '#ffffff',
                         pointBorderWidth: 2,
-                        pointRadius: 5
+                        pointRadius: 6
                     }]
                 },
                 options: {
@@ -216,10 +600,10 @@
                         y: {
                             beginAtZero: false,
                             grid: {
-                                color: '#f3f4f6'
+                                color: 'rgba(220, 38, 38, 0.2)'
                             },
                             ticks: {
-                                color: '#6b7280'
+                                color: '#ffffff'
                             }
                         },
                         x: {
@@ -227,7 +611,7 @@
                                 display: false
                             },
                             ticks: {
-                                color: '#6b7280'
+                                color: '#ffffff'
                             }
                         }
                     }
@@ -243,8 +627,8 @@
                     datasets: [{
                         label: 'Calories',
                         data: processedCaloriesData,
-                        backgroundColor: '#10b981',
-                        borderColor: '#059669',
+                        backgroundColor: 'rgba(220, 38, 38, 0.8)',
+                        borderColor: '#dc2626',
                         borderWidth: 1,
                         borderRadius: 6
                     }]
@@ -262,10 +646,10 @@
                             beginAtZero: true,
                             max: Math.max(calorieGoal * 1.2, Math.max(...processedCaloriesData) * 1.1),
                             grid: {
-                                color: '#f3f4f6'
+                                color: 'rgba(220, 38, 38, 0.2)'
                             },
                             ticks: {
-                                color: '#6b7280'
+                                color: '#ffffff'
                             }
                         },
                         x: {
@@ -273,7 +657,7 @@
                                 display: false
                             },
                             ticks: {
-                                color: '#6b7280'
+                                color: '#ffffff'
                             }
                         }
                     },
@@ -288,7 +672,7 @@
             // Animate progress circles
             function animateProgressCircle(id, progress) {
                 const circle = document.getElementById(id);
-                const circumference = 2 * Math.PI * 45;
+                const circumference = 2 * Math.PI * 55;
                 const offset = circumference - (progress / 100) * circumference;
                 circle.style.strokeDashoffset = offset;
             }
