@@ -1,5 +1,5 @@
 
-/* CedHealth - Professional Global Styles */
+/* CedHealth - Dinosaur Dark Theme */
 
 /* Reset and Base Styles */
 * {
@@ -9,21 +9,23 @@
 }
 
 :root {
-    --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-    --background-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --surface: rgba(255, 255, 255, 0.95);
-    --primary-color: #4f46e5;
-    --secondary-color: #7c3aed;
+    --primary-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    --background-gradient: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+    --surface: rgba(20, 20, 35, 0.95);
+    --primary-color: #4ade80;
+    --secondary-color: #22c55e;
     --success-color: #10b981;
     --warning-color: #f59e0b;
-    --error-color: #dc2626;
-    --text-primary: #0f172a;
-    --text-secondary: #64748b;
-    --border-light: #e5e7eb;
-    --surface-light: #f9fafb;
-    --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 10px 25px rgba(79, 70, 229, 0.3);
-    --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.1);
+    --error-color: #ef4444;
+    --text-primary: #e5e7eb;
+    --text-secondary: #9ca3af;
+    --border-light: #374151;
+    --surface-light: #1f2937;
+    --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 10px 25px rgba(74, 222, 128, 0.2);
+    --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.4);
+    --dino-green: #4ade80;
+    --dino-dark: #166534;
 }
 
 body {
@@ -32,6 +34,30 @@ body {
     color: var(--text-primary);
     background: var(--background-gradient);
     min-height: 100vh;
+    position: relative;
+}
+
+/* Dinosaur Background Pattern */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="20" font-size="16" fill="%23166534" opacity="0.1">🦕</text></svg>'),
+        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="20" font-size="12" fill="%23166534" opacity="0.08">🦖</text></svg>'),
+        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="20" font-size="14" fill="%23166534" opacity="0.06">🦴</text></svg>');
+    background-size: 200px 200px, 150px 150px, 300px 300px;
+    background-position: 0 0, 50px 50px, 100px 100px;
+    animation: dinoFloat 20s ease-in-out infinite;
+    z-index: -1;
+}
+
+@keyframes dinoFloat {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
 }
 
 /* Typography */
@@ -41,9 +67,18 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--text-primary);
 }
 
-h1 { font-size: 2.5rem; }
-h2 { font-size: 2rem; }
-h3 { font-size: 1.5rem; }
+h1 { 
+    font-size: 2.5rem; 
+    text-shadow: 0 0 20px rgba(74, 222, 128, 0.3);
+}
+h2 { 
+    font-size: 2rem;
+    color: var(--dino-green);
+}
+h3 { 
+    font-size: 1.5rem;
+    color: var(--dino-green);
+}
 h4 { font-size: 1.25rem; }
 h5 { font-size: 1.125rem; }
 h6 { font-size: 1rem; }
@@ -66,24 +101,41 @@ p {
     box-shadow: var(--shadow-lg);
     overflow: hidden;
     backdrop-filter: blur(10px);
+    border: 1px solid rgba(74, 222, 128, 0.1);
 }
 
 .card-header {
-    background: var(--primary-gradient);
+    background: linear-gradient(135deg, var(--dino-dark) 0%, var(--primary-color) 100%);
     color: white;
     padding: 40px 30px;
     text-align: center;
     position: relative;
+    overflow: hidden;
 }
 
 .card-header::before {
-    content: '';
+    content: '🦕';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    top: 10px;
+    right: 10px;
+    font-size: 2rem;
+    opacity: 0.3;
+    animation: bounce 2s ease-in-out infinite;
+}
+
+.card-header::after {
+    content: '🦖';
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    font-size: 1.5rem;
+    opacity: 0.3;
+    animation: bounce 2s ease-in-out infinite reverse;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-5px); }
 }
 
 .card-content {
@@ -116,6 +168,7 @@ textarea {
     border: 2px solid var(--border-light);
     border-radius: 12px;
     background: var(--surface-light);
+    color: var(--text-primary);
     transition: all 0.3s ease;
     font-family: inherit;
 }
@@ -125,8 +178,8 @@ select:focus,
 textarea:focus {
     outline: none;
     border-color: var(--primary-color);
-    background: white;
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    background: rgba(31, 41, 55, 0.8);
+    box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.2);
 }
 
 /* Buttons */
@@ -145,27 +198,45 @@ textarea:focus {
     letter-spacing: 0.5px;
     font-family: inherit;
     min-width: 120px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '🦕';
+    position: absolute;
+    left: -30px;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: left 0.3s ease;
+    opacity: 0;
+}
+
+.btn:hover::before {
+    left: 10px;
+    opacity: 1;
 }
 
 .btn-primary {
-    background: var(--primary-gradient);
+    background: linear-gradient(135deg, var(--dino-dark) 0%, var(--primary-color) 100%);
     color: white;
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
+    padding-left: 50px;
 }
 
 .btn-secondary {
-    background: white;
+    background: var(--surface-light);
     color: var(--primary-color);
     border: 2px solid var(--primary-color);
 }
 
 .btn-secondary:hover {
     background: var(--primary-color);
-    color: white;
+    color: var(--surface-light);
     transform: translateY(-2px);
 }
 
@@ -199,28 +270,35 @@ textarea:focus {
     margin-bottom: 25px;
     font-weight: 500;
     border-left: 4px solid;
+    background: var(--surface-light);
+    position: relative;
+}
+
+.alert::before {
+    content: '🦴';
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.5;
 }
 
 .alert-error {
-    background: #fef2f2;
     color: var(--error-color);
     border-left-color: var(--error-color);
 }
 
 .alert-success {
-    background: #f0fdf4;
     color: var(--success-color);
     border-left-color: var(--success-color);
 }
 
 .alert-warning {
-    background: #fffbeb;
     color: var(--warning-color);
     border-left-color: var(--warning-color);
 }
 
 .alert-info {
-    background: #eff6ff;
     color: var(--primary-color);
     border-left-color: var(--primary-color);
 }
@@ -235,26 +313,27 @@ textarea:focus {
 table {
     width: 100%;
     border-collapse: collapse;
-    background: white;
+    background: var(--surface-light);
 }
 
 th, td {
     padding: 16px 20px;
     text-align: left;
     border-bottom: 1px solid var(--border-light);
+    color: var(--text-primary);
 }
 
 th {
-    background: var(--surface-light);
+    background: var(--surface);
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--primary-color);
     text-transform: uppercase;
     font-size: 0.85rem;
     letter-spacing: 0.5px;
 }
 
 tr:hover {
-    background: var(--surface-light);
+    background: rgba(74, 222, 128, 0.05);
 }
 
 /* Links */
@@ -267,6 +346,7 @@ a {
 
 a:hover {
     color: var(--secondary-color);
+    text-shadow: 0 0 10px rgba(74, 222, 128, 0.3);
 }
 
 /* Utilities */
@@ -311,6 +391,45 @@ a:hover {
 .gap-2 { gap: 1rem; }
 .gap-3 { gap: 1.5rem; }
 .gap-4 { gap: 2rem; }
+
+/* Special Dinosaur Elements */
+.dino-header {
+    position: relative;
+}
+
+.dino-header::before {
+    content: '🦕 ROAR! 🦖';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.8rem;
+    opacity: 0.6;
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from { text-shadow: 0 0 5px rgba(74, 222, 128, 0.5); }
+    to { text-shadow: 0 0 20px rgba(74, 222, 128, 0.8); }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--surface-light);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-color);
+}
 
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -359,16 +478,5 @@ a:hover {
     
     th, td {
         padding: 10px 12px;
-    }
-}
-
-/* Dark mode support (optional) */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --surface: rgba(31, 41, 55, 0.95);
-        --text-primary: #f9fafb;
-        --text-secondary: #d1d5db;
-        --border-light: #374151;
-        --surface-light: #374151;
     }
 }
