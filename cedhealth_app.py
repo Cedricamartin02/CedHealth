@@ -943,7 +943,7 @@ def gif_exercises():
     error_message = None
     
     try:
-        # Fetch exercises from ExerciseDB API
+        # Fetch exercises from ExerciseDB API via RapidAPI
         url = "https://exercisedb.p.rapidapi.com/exercises?limit=12"
         headers = {
             "x-rapidapi-key": "e5ab48f2b8msh50c42a50dce5e64p1592edjsn1ad068fbd807",
