@@ -1,0 +1,342 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Information - CedHealth</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #000;
+            color: #ffffff;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(220, 38, 38, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(127, 29, 29, 0.1) 0%, transparent 50%);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 30px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(127, 29, 29, 0.1) 100%);
+            border-radius: 20px;
+            border: 2px solid rgba(220, 38, 38, 0.3);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            color: rgba(220, 38, 38, 0.8);
+        }
+
+        .product-card {
+            background: rgba(20, 20, 20, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(220, 38, 38, 0.2);
+            border: 2px solid rgba(220, 38, 38, 0.3);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .product-header {
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.2) 0%, rgba(127, 29, 29, 0.2) 100%);
+            padding: 30px;
+            border-bottom: 2px solid rgba(220, 38, 38, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .product-image {
+            width: 100px;
+            height: 100px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 2px solid rgba(220, 38, 38, 0.3);
+        }
+
+        .product-info {
+            flex: 1;
+        }
+
+        .product-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
+        }
+
+        .product-brand {
+            font-size: 1.2rem;
+            color: rgba(220, 38, 38, 0.8);
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .product-barcode {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-family: 'Courier New', monospace;
+            background: rgba(31, 31, 31, 0.5);
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .nutrition-section {
+            padding: 30px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 25px;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
+        }
+
+        .nutrition-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+        }
+
+        .nutrition-item {
+            background: rgba(31, 31, 31, 0.7);
+            border: 2px solid rgba(220, 38, 38, 0.2);
+            border-radius: 16px;
+            padding: 25px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .nutrition-item:hover {
+            border-color: rgba(220, 38, 38, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 38, 38, 0.2);
+        }
+
+        .nutrition-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #dc2626;
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
+        }
+
+        .nutrition-label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nutrition-unit {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 4px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px 32px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: rgba(220, 38, 38, 0.8);
+            border: 2px solid rgba(220, 38, 38, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(220, 38, 38, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(220, 38, 38, 0.1);
+            border-color: #dc2626;
+            color: #dc2626;
+        }
+
+        .per-serving-note {
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            color: #93c5fd;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+            }
+
+            .header {
+                padding: 30px 15px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .product-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+
+            .nutrition-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+
+            .nutrition-item {
+                padding: 20px 15px;
+            }
+
+            .nutrition-value {
+                font-size: 1.6rem;
+            }
+
+            .actions {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Product Found!</h1>
+            <p>Nutritional information from Open Food Facts</p>
+        </div>
+
+        <div class="product-card">
+            <div class="product-header">
+                {% if product.image_url %}
+                    <img src="{{ product.image_url }}" alt="{{ product.name }}" class="product-image">
+                {% else %}
+                    <div class="product-image" style="background: rgba(220, 38, 38, 0.2); display: flex; align-items: center; justify-content: center; font-size: 2rem;">🥫</div>
+                {% endif %}
+                
+                <div class="product-info">
+                    <h2 class="product-name">{{ product.name }}</h2>
+                    <p class="product-brand">{{ product.brand }}</p>
+                    <span class="product-barcode">Barcode: {{ product.barcode }}</span>
+                </div>
+            </div>
+
+            <div class="nutrition-section">
+                <h3 class="section-title">Nutritional Information</h3>
+                
+                <div class="nutrition-grid">
+                    <div class="nutrition-item">
+                        <div class="nutrition-value">{{ "%.0f"|format(product.calories or 0) }}</div>
+                        <div class="nutrition-label">Calories</div>
+                        <div class="nutrition-unit">per 100g</div>
+                    </div>
+                    
+                    <div class="nutrition-item">
+                        <div class="nutrition-value">{{ "%.1f"|format(product.protein or 0) }}g</div>
+                        <div class="nutrition-label">Protein</div>
+                        <div class="nutrition-unit">per 100g</div>
+                    </div>
+                    
+                    <div class="nutrition-item">
+                        <div class="nutrition-value">{{ "%.1f"|format(product.fat or 0) }}g</div>
+                        <div class="nutrition-label">Fat</div>
+                        <div class="nutrition-unit">per 100g</div>
+                    </div>
+                    
+                    <div class="nutrition-item">
+                        <div class="nutrition-value">{{ "%.1f"|format(product.carbs or 0) }}g</div>
+                        <div class="nutrition-label">Carbs</div>
+                        <div class="nutrition-unit">per 100g</div>
+                    </div>
+                </div>
+
+                <div class="per-serving-note">
+                    💡 <strong>Note:</strong> Values shown are per 100g of product. Adjust serving size as needed when logging to your meals.
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <a href="{{ url_for('food_facts') }}" class="btn btn-primary">🔍 Scan Another Barcode</a>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Back to Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

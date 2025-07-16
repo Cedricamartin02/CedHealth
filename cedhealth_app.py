@@ -822,6 +822,50 @@ def log_saved_meal(saved_meal_id):
     return redirect(url_for('meals'))
 
 
+@app.route('/food_facts', methods=['GET', 'POST'])
+def food_facts():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    error_message = None
+    
+    if request.method == 'POST':
+        barcode = request.form.get('barcode', '').strip()
+        
+        if not barcode:
+            error_message = "Please enter a barcode."
+        else:
+            try:
+                # Fetch data from Open Food Facts API
+                url = f"https://world.openfoodfacts.org/api/v0/product/{barcode}.json"
+                response = requests.get(url)
+                data = response.json()
+                
+                if data.get('status') == 1 and 'product' in data:
+                    product = data['product']
+                    
+                    # Extract product information
+                    product_info = {
+                        'name': product.get('product_name', 'Unknown Product'),
+                        'brand': product.get('brands', 'Unknown Brand'),
+                        'calories': product.get('nutriments', {}).get('energy-kcal_100g', 0),
+                        'protein': product.get('nutriments', {}).get('proteins_100g', 0),
+                        'fat': product.get('nutriments', {}).get('fat_100g', 0),
+                        'carbs': product.get('nutriments', {}).get('carbohydrates_100g', 0),
+                        'barcode': barcode,
+                        'image_url': product.get('image_url', '')
+                    }
+                    
+                    return render_template('food_facts_result.html', product=product_info)
+                else:
+                    error_message = f"Product with barcode {barcode} not found in the database."
+                    
+            except Exception as e:
+                error_message = f"Error fetching product data: {str(e)}"
+    
+    return render_template('food_facts_form.html', error_message=error_message)
+
+
 # ---------- RUN ----------
 if __name__ == '__main__':
     app.run(debug=True)
