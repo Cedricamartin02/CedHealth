@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Workout Explorer - CedHealth</title>
+    <title>Meal of the Day - CedHealth</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -32,7 +32,7 @@
             background: 
                 radial-gradient(circle at 20% 30%, rgba(220, 38, 38, 0.1) 0%, transparent 50%),
                 radial-gradient(circle at 80% 70%, rgba(127, 29, 29, 0.1) 0%, transparent 50%),
-                url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><text y="50" font-size="40" fill="rgba(127,29,29,0.05)">💪</text><text x="100" y="150" font-size="30" fill="rgba(127,29,29,0.05)">🏋️</text></svg>');
+                url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><text y="50" font-size="40" fill="rgba(127,29,29,0.05)">🍽️</text><text x="100" y="150" font-size="30" fill="rgba(127,29,29,0.05)">🥗</text></svg>');
             background-size: 100% 100%, 100% 100%, 200px 200px;
             z-index: -1;
             animation: float 20s infinite linear;
@@ -148,9 +148,20 @@
             box-shadow: 0 10px 25px rgba(220, 38, 38, 0.3);
         }
 
+        .btn-primary {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(220, 38, 38, 0.3);
+        }
+
         /* Main Container */
         .main-container {
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
             padding: 40px 30px;
         }
@@ -174,84 +185,57 @@
             font-weight: 500;
         }
 
-        /* Exercise Cards */
-        .exercises-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 30px;
-        }
-
-        .exercise-card {
+        /* Recipe Card */
+        .recipe-card {
             background: rgba(20, 20, 20, 0.95);
             border-radius: 20px;
             box-shadow: 0 0 30px rgba(220, 38, 38, 0.2);
             border: 2px solid rgba(220, 38, 38, 0.3);
             overflow: hidden;
             backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
         }
 
-        .exercise-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(220, 38, 38, 0.3);
-        }
-
-        .exercise-image {
+        .recipe-image {
             width: 100%;
-            height: 200px;
+            height: 300px;
             object-fit: cover;
-            background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(127, 29, 29, 0.1) 100%);
         }
 
-        .exercise-placeholder {
-            width: 100%;
-            height: 200px;
-            background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(127, 29, 29, 0.1) 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            color: rgba(220, 38, 38, 0.5);
+        .recipe-content {
+            padding: 30px;
         }
 
-        .exercise-content {
-            padding: 25px;
-        }
-
-        .exercise-name {
-            font-size: 1.3rem;
+        .recipe-title {
+            font-size: 1.8rem;
             font-weight: 600;
             color: #ffffff;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             text-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
         }
 
-        .exercise-category {
-            font-size: 0.9rem;
-            color: #dc2626;
+        .recipe-meta {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            color: rgba(220, 38, 38, 0.8);
             font-weight: 500;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
-        .exercise-description {
+        .recipe-time {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .recipe-summary {
             color: rgba(255, 255, 255, 0.8);
             line-height: 1.6;
-            font-size: 0.95rem;
+            margin-bottom: 25px;
         }
 
-        .exercise-description p {
-            margin-bottom: 10px;
-        }
-
-        .exercise-description ul {
-            margin-left: 20px;
-            margin-bottom: 10px;
-        }
-
-        .exercise-description li {
-            margin-bottom: 5px;
+        .recipe-actions {
+            text-align: center;
         }
 
         .error-message {
@@ -265,7 +249,7 @@
             font-weight: 500;
         }
 
-        .no-exercises {
+        .no-recipe {
             text-align: center;
             color: rgba(255, 255, 255, 0.6);
             font-size: 1.1rem;
@@ -304,13 +288,14 @@
                 font-size: 2rem;
             }
             
-            .exercises-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
+            .recipe-content {
+                padding: 20px;
             }
             
-            .exercise-card {
-                margin-bottom: 20px;
+            .recipe-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
             }
         }
     </style>
@@ -321,7 +306,7 @@
         <div class="nav-container">
             <div class="nav-left">
                 <div class="logo">
-                    <div class="logo-icon">💪</div>
+                    <div class="logo-icon">🍽️</div>
                     <span class="logo-text">CedHealth</span>
                 </div>
             </div>
@@ -331,6 +316,7 @@
                     <a href="/goals" class="nav-link">Goals</a>
                     <a href="/meals" class="nav-link">Meals</a>
                     <a href="/food_facts" class="nav-link">Scan Barcode</a>
+                    <a href="/exercises" class="nav-link">Exercises</a>
                     <a href="/logout" class="btn btn-outline">Logout</a>
                 </div>
             </div>
@@ -340,22 +326,8 @@
     <!-- Main Content -->
     <div class="main-container">
         <div class="page-header">
-            <h1 class="page-title">💪 Workout Explorer</h1>
-            <p class="page-subtitle">Discover new exercises to enhance your fitness journey</p>
-        </div>
-
-        <!-- Category Filter -->
-        <div style="margin-bottom: 40px; text-align: center;">
-            <form method="GET" action="/exercises">
-                <select name="category" onchange="this.form.submit()" style="padding: 12px 20px; border-radius: 12px; border: 2px solid rgba(220, 38, 38, 0.4); background: rgba(31, 31, 31, 0.9); color: #ffffff; font-size: 1rem;">
-                    <option value="">All Categories</option>
-                    {% for category in categories %}
-                    <option value="{{ category.id }}" {% if selected_category == category.id|string %}selected{% endif %}>
-                        {{ category.name }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </form>
+            <h1 class="page-title">🍽️ Meal of the Day</h1>
+            <p class="page-subtitle">Discover a delicious recipe to try today</p>
         </div>
 
         {% if error_message %}
@@ -364,30 +336,41 @@
         </div>
         {% endif %}
 
-        {% if exercises %}
-        <div class="exercises-grid">
-            {% for exercise in exercises %}
-            <div class="exercise-card">
-                {% if exercise.images %}
-                    <img src="{{ exercise.images[0] }}" alt="{{ exercise.name }}" class="exercise-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="exercise-placeholder" style="display: none;">🏋️</div>
-                {% else %}
-                    <div class="exercise-placeholder">🏋️</div>
-                {% endif %}
+        {% if recipe %}
+        <div class="recipe-card">
+            {% if recipe.image %}
+            <img src="{{ recipe.image }}" alt="{{ recipe.title }}" class="recipe-image">
+            {% endif %}
+            
+            <div class="recipe-content">
+                <h2 class="recipe-title">{{ recipe.title }}</h2>
                 
-                <div class="exercise-content">
-                    <h3 class="exercise-name">{{ exercise.name }}</h3>
-                    <div class="exercise-category">Category: {{ exercise.category }}</div>
-                    <div class="exercise-description">
-                        {{ exercise.description | safe }}
+                <div class="recipe-meta">
+                    <div class="recipe-time">
+                        <span>⏰</span>
+                        <span>{{ recipe.readyInMinutes }} minutes</span>
                     </div>
                 </div>
+                
+                {% if recipe.summary %}
+                <p class="recipe-summary">{{ recipe.summary }}</p>
+                {% endif %}
+                
+                <div class="recipe-actions">
+                    {% if recipe.sourceUrl %}
+                    <a href="{{ recipe.sourceUrl }}" target="_blank" class="btn btn-primary">
+                        See Full Recipe
+                    </a>
+                    {% endif %}
+                    <a href="/meal_of_the_day" class="btn btn-outline" style="margin-left: 15px;">
+                        Get Another Recipe
+                    </a>
+                </div>
             </div>
-            {% endfor %}
         </div>
         {% else %}
-        <div class="no-exercises">
-            <p>No exercises found. Please try again later.</p>
+        <div class="no-recipe">
+            <p>No recipe found. Please try again later.</p>
         </div>
         {% endif %}
     </div>

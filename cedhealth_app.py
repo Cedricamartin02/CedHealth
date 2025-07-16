@@ -872,11 +872,28 @@ def exercises():
         return redirect(url_for('login'))
     
     exercises_data = []
+    categories_data = []
     error_message = None
+    selected_category = request.args.get('category', '')
     
     try:
-        # Fetch exercises from WGER API
-        exercises_url = "https://wger.de/api/v2/exercise/?language=2&limit=20"
+        # Fetch exercise categories
+        categories_url = "https://wger.de/api/v2/exercisecategory/"
+        categories_response = requests.get(categories_url)
+        categories_json = categories_response.json()
+        
+        if 'results' in categories_json:
+            for category in categories_json['results']:
+                categories_data.append({
+                    'id': category.get('id'),
+                    'name': category.get('name', 'Unknown Category')
+                })
+        
+        # Build exercises URL with optional category filter
+        exercises_url = "https://wger.de/api/v2/exercise/?language=2&limit=15"
+        if selected_category:
+            exercises_url += f"&category={selected_category}"
+            
         exercises_response = requests.get(exercises_url)
         exercises_json = exercises_response.json()
         
@@ -910,7 +927,11 @@ def exercises():
     except Exception as e:
         error_message = f"Error fetching exercises: {str(e)}"
     
-    return render_template('exercises.html', exercises=exercises_data, error_message=error_message)
+    return render_template('exercises.html', 
+                         exercises=exercises_data, 
+                         categories=categories_data,
+                         selected_category=selected_category,
+                         error_message=error_message)
 
 
 @app.route('/gif_exercises')
@@ -947,6 +968,48 @@ def gif_exercises():
         error_message = f"Error fetching exercises: {str(e)}"
     
     return render_template('gif_exercises.html', exercises=exercises_data, error_message=error_message)
+
+
+@app.route('/meal_of_the_day')
+def meal_of_the_day():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    recipe_data = None
+    error_message = None
+    
+    try:
+        # Fetch random recipe from Spoonacular API
+        url = "https://api.spoonacular.com/recipes/random?number=1"
+        headers = {"x-api-key": "669ab752fed34d5ea3f9b188b1983b8b"}
+        
+        response = requests.get(url, headers=headers)
+        data = response.json()
+        
+        if 'recipes' in data and data['recipes']:
+            recipe = data['recipes'][0]
+            
+            # Clean HTML from summary using BeautifulSoup
+            from bs4 import BeautifulSoup
+            summary = recipe.get('summary', '')
+            if summary:
+                soup = BeautifulSoup(summary, 'html.parser')
+                summary = soup.get_text()
+            
+            recipe_data = {
+                'title': recipe.get('title', 'Unknown Recipe'),
+                'image': recipe.get('image', ''),
+                'summary': summary,
+                'readyInMinutes': recipe.get('readyInMinutes', 0),
+                'sourceUrl': recipe.get('sourceUrl', '')
+            }
+        else:
+            error_message = "No recipe found. Please try again."
+            
+    except Exception as e:
+        error_message = f"Error fetching recipe: {str(e)}"
+    
+    return render_template('meal_of_the_day.html', recipe=recipe_data, error_message=error_message)
 
 
 # ---------- RUN ----------
