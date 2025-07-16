@@ -390,32 +390,32 @@
 
         {% if exercises %}
         <div class="exercises-grid">
-            {% for exercise in exercises %}
+            {% for ex in exercises %}
             <div class="exercise-card">
-                {% if exercise.gifUrl %}
-                    <img src="{{ exercise.gifUrl }}" alt="{{ exercise.name }}" class="exercise-gif" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                {% if ex.gifUrl %}
+                    <img src="{{ ex.gifUrl }}" alt="{{ ex.name }}" style="width: 100%; height: auto;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                     <div class="exercise-placeholder" style="display: none;">🏋️</div>
                 {% else %}
                     <div class="exercise-placeholder">🏋️</div>
                 {% endif %}
                 
                 <div class="exercise-content">
-                    <h3 class="exercise-name">{{ exercise.name }}</h3>
+                    <h3 class="exercise-name">{{ ex.name }}</h3>
                     
                     <div class="exercise-details">
                         <div class="exercise-detail">
                             <span class="detail-label">Body Part</span>
-                            <span class="detail-value">{{ exercise.bodyPart }}</span>
+                            <span class="detail-value">{{ ex.bodyPart }}</span>
                         </div>
                         <div class="exercise-detail">
                             <span class="detail-label">Equipment</span>
-                            <span class="detail-value">{{ exercise.equipment }}</span>
+                            <span class="detail-value">{{ ex.equipment }}</span>
                         </div>
                     </div>
                     
                     <div class="target-muscle">
                         <div class="target-label">Target Muscle</div>
-                        <div class="target-value">{{ exercise.target }}</div>
+                        <div class="target-value">{{ ex.target }}</div>
                     </div>
                 </div>
             </div>
