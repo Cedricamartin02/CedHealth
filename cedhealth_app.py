@@ -951,19 +951,30 @@ def gif_exercises():
         }
         
         response = requests.get(url, headers=headers)
+        response.raise_for_status()  # Raise an exception for bad status codes
+        
         exercises_json = response.json()
         
-        # Process exercises
-        for exercise in exercises_json:
-            exercise_data = {
-                'name': exercise.get('name', 'Unknown Exercise'),
-                'bodyPart': exercise.get('bodyPart', 'Unknown Body Part'),
-                'equipment': exercise.get('equipment', 'Unknown Equipment'),
-                'target': exercise.get('target', 'Unknown Target'),
-                'gifUrl': exercise.get('gifUrl', '')
-            }
-            exercises_data.append(exercise_data)
+        # Check if response is a list (expected format from ExerciseDB)
+        if isinstance(exercises_json, list):
+            # Process exercises
+            for exercise in exercises_json:
+                if isinstance(exercise, dict):
+                    exercise_data = {
+                        'name': exercise.get('name', 'Unknown Exercise'),
+                        'bodyPart': exercise.get('bodyPart', 'Unknown Body Part'),
+                        'equipment': exercise.get('equipment', 'Unknown Equipment'),
+                        'target': exercise.get('target', 'Unknown Target'),
+                        'gifUrl': exercise.get('gifUrl', '')
+                    }
+                    exercises_data.append(exercise_data)
+        else:
+            error_message = "Unexpected response format from ExerciseDB API"
     
+    except requests.exceptions.RequestException as e:
+        error_message = f"Network error fetching exercises: {str(e)}"
+    except ValueError as e:
+        error_message = f"Error parsing exercise data: {str(e)}"
     except Exception as e:
         error_message = f"Error fetching exercises: {str(e)}"
     
