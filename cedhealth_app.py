@@ -913,6 +913,42 @@ def exercises():
     return render_template('exercises.html', exercises=exercises_data, error_message=error_message)
 
 
+@app.route('/gif_exercises')
+def gif_exercises():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    exercises_data = []
+    error_message = None
+    
+    try:
+        # Fetch exercises from ExerciseDB API
+        url = "https://exercisedb.p.rapidapi.com/exercises?limit=12"
+        headers = {
+            "x-rapidapi-key": "e5ab48f2b8msh50c42a50dce5e64p1592edjsn1ad068fbd807",
+            "x-rapidapi-host": "exercisedb.p.rapidapi.com"
+        }
+        
+        response = requests.get(url, headers=headers)
+        exercises_json = response.json()
+        
+        # Process exercises
+        for exercise in exercises_json:
+            exercise_data = {
+                'name': exercise.get('name', 'Unknown Exercise'),
+                'bodyPart': exercise.get('bodyPart', 'Unknown Body Part'),
+                'equipment': exercise.get('equipment', 'Unknown Equipment'),
+                'target': exercise.get('target', 'Unknown Target'),
+                'gifUrl': exercise.get('gifUrl', '')
+            }
+            exercises_data.append(exercise_data)
+    
+    except Exception as e:
+        error_message = f"Error fetching exercises: {str(e)}"
+    
+    return render_template('gif_exercises.html', exercises=exercises_data, error_message=error_message)
+
+
 # ---------- RUN ----------
 if __name__ == '__main__':
     app.run(debug=True)
