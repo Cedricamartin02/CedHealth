@@ -1,0 +1,381 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout Explorer - CedHealth</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #000;
+            color: #ffffff;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(220, 38, 38, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(127, 29, 29, 0.1) 0%, transparent 50%),
+                url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><text y="50" font-size="40" fill="rgba(127,29,29,0.05)">💪</text><text x="100" y="150" font-size="30" fill="rgba(127,29,29,0.05)">🏋️</text></svg>');
+            background-size: 100% 100%, 100% 100%, 200px 200px;
+            z-index: -1;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { background-position: 0% 0%, 0% 0%, 0px 0px; }
+            100% { background-position: 0% 0%, 0% 0%, 200px 200px; }
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            background: rgba(20, 20, 20, 0.95);
+            border-bottom: 2px solid rgba(220, 38, 38, 0.3);
+            box-shadow: 0 0 30px rgba(220, 38, 38, 0.2);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 80px;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            color: #dc2626;
+            font-size: 2rem;
+        }
+
+        .logo-text {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 10px 20px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .nav-link:hover {
+            color: #dc2626;
+            background: rgba(220, 38, 38, 0.1);
+            border-color: rgba(220, 38, 38, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #dc2626;
+            border: 2px solid #dc2626;
+        }
+
+        .btn-outline:hover {
+            background: #dc2626;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(220, 38, 38, 0.3);
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 30px;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px rgba(220, 38, 38, 0.5);
+        }
+
+        .page-subtitle {
+            font-size: 1.1rem;
+            color: rgba(220, 38, 38, 0.8);
+            font-weight: 500;
+        }
+
+        /* Exercise Cards */
+        .exercises-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+        }
+
+        .exercise-card {
+            background: rgba(20, 20, 20, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(220, 38, 38, 0.2);
+            border: 2px solid rgba(220, 38, 38, 0.3);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .exercise-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(220, 38, 38, 0.3);
+        }
+
+        .exercise-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(127, 29, 29, 0.1) 100%);
+        }
+
+        .exercise-placeholder {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(127, 29, 29, 0.1) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: rgba(220, 38, 38, 0.5);
+        }
+
+        .exercise-content {
+            padding: 25px;
+        }
+
+        .exercise-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
+        }
+
+        .exercise-category {
+            font-size: 0.9rem;
+            color: #dc2626;
+            font-weight: 500;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .exercise-description {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .exercise-description p {
+            margin-bottom: 10px;
+        }
+
+        .exercise-description ul {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+
+        .exercise-description li {
+            margin-bottom: 5px;
+        }
+
+        .error-message {
+            background: rgba(220, 38, 38, 0.1);
+            border: 2px solid rgba(220, 38, 38, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #dc2626;
+            font-weight: 500;
+        }
+
+        .no-exercises {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.1rem;
+            margin-top: 50px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-container {
+                padding: 0 20px;
+                height: auto;
+                min-height: 80px;
+                flex-direction: column;
+                gap: 20px;
+                padding-top: 20px;
+                padding-bottom: 20px;
+            }
+            
+            .nav-left {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 15px;
+            }
+            
+            .main-container {
+                padding: 30px 20px;
+            }
+            
+            .page-title {
+                font-size: 2rem;
+            }
+            
+            .exercises-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .exercise-card {
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-left">
+                <div class="logo">
+                    <div class="logo-icon">💪</div>
+                    <span class="logo-text">CedHealth</span>
+                </div>
+            </div>
+            <div class="nav-right">
+                <div class="nav-links">
+                    <a href="/dashboard" class="nav-link">Dashboard</a>
+                    <a href="/goals" class="nav-link">Goals</a>
+                    <a href="/meals" class="nav-link">Meals</a>
+                    <a href="/food_facts" class="nav-link">Scan Barcode</a>
+                    <a href="/logout" class="btn btn-outline">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <div class="page-header">
+            <h1 class="page-title">💪 Workout Explorer</h1>
+            <p class="page-subtitle">Discover new exercises to enhance your fitness journey</p>
+        </div>
+
+        {% if error_message %}
+        <div class="error-message">
+            {{ error_message }}
+        </div>
+        {% endif %}
+
+        {% if exercises %}
+        <div class="exercises-grid">
+            {% for exercise in exercises %}
+            <div class="exercise-card">
+                {% if exercise.images %}
+                    <img src="{{ exercise.images[0] }}" alt="{{ exercise.name }}" class="exercise-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="exercise-placeholder" style="display: none;">🏋️</div>
+                {% else %}
+                    <div class="exercise-placeholder">🏋️</div>
+                {% endif %}
+                
+                <div class="exercise-content">
+                    <h3 class="exercise-name">{{ exercise.name }}</h3>
+                    <div class="exercise-category">Category: {{ exercise.category }}</div>
+                    <div class="exercise-description">
+                        {{ exercise.description | safe }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-exercises">
+            <p>No exercises found. Please try again later.</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

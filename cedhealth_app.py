@@ -866,6 +866,53 @@ def food_facts():
     return render_template('food_facts_form.html', error_message=error_message)
 
 
+@app.route('/exercises')
+def exercises():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    exercises_data = []
+    error_message = None
+    
+    try:
+        # Fetch exercises from WGER API
+        exercises_url = "https://wger.de/api/v2/exercise/?language=2&limit=20"
+        exercises_response = requests.get(exercises_url)
+        exercises_json = exercises_response.json()
+        
+        # Fetch exercise images
+        images_url = "https://wger.de/api/v2/exerciseimage/"
+        images_response = requests.get(images_url)
+        images_json = images_response.json()
+        
+        # Create a mapping of exercise ID to images
+        exercise_images = {}
+        if 'results' in images_json:
+            for image in images_json['results']:
+                exercise_id = image.get('exercise')
+                if exercise_id not in exercise_images:
+                    exercise_images[exercise_id] = []
+                exercise_images[exercise_id].append(image.get('image', ''))
+        
+        # Process exercises
+        if 'results' in exercises_json:
+            for exercise in exercises_json['results']:
+                exercise_id = exercise.get('id')
+                exercise_data = {
+                    'id': exercise_id,
+                    'name': exercise.get('name', 'Unknown Exercise'),
+                    'description': exercise.get('description', 'No description available'),
+                    'category': exercise.get('category', 'Unknown Category'),
+                    'images': exercise_images.get(exercise_id, [])
+                }
+                exercises_data.append(exercise_data)
+    
+    except Exception as e:
+        error_message = f"Error fetching exercises: {str(e)}"
+    
+    return render_template('exercises.html', exercises=exercises_data, error_message=error_message)
+
+
 # ---------- RUN ----------
 if __name__ == '__main__':
     app.run(debug=True)
