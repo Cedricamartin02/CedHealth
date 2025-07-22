@@ -637,7 +637,8 @@ def meals():
                            nutrition_data=nutrition_data,
                            error_message=error_message,
                            macro_totals=macro_totals,
-                           macro_goals=macro_goals)
+                           macro_goals=macro_goals,
+                           current_date=datetime.now().date().isoformat())
 
 
 @app.route('/delete_meal/<int:meal_id>', methods=['GET', 'POST'])
