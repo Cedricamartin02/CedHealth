@@ -324,6 +324,7 @@ def dashboard():
     goal = c.fetchone()
     
     # Default values if no goals set
+    weight_goal = goal[0] if goal else None
     calorie_goal = goal[1] if goal else 2000
     protein_goal = goal[2] if goal else 150
     carbs_goal = goal[3] if goal else 250
@@ -375,12 +376,74 @@ def dashboard():
     carbs_progress = min(100, (current_carbs / carbs_goal) * 100) if carbs_goal > 0 else 0
     fiber_progress = min(100, (current_fiber / fiber_goal) * 100) if fiber_goal > 0 else 0
 
+    # Get meal of the day
+    recipe_data = None
+    try:
+        url = "https://api.spoonacular.com/recipes/random?number=1"
+        headers = {"x-api-key": "669ab752fed34d5ea3f9b188b1983b8b"}
+        
+        response = requests.get(url, headers=headers)
+        data = response.json()
+        
+        if 'recipes' in data and data['recipes']:
+            recipe = data['recipes'][0]
+            from bs4 import BeautifulSoup
+            summary = recipe.get('summary', '')
+            if summary:
+                soup = BeautifulSoup(summary, 'html.parser')
+                summary = soup.get_text()
+            
+            recipe_data = {
+                'title': recipe.get('title', 'Unknown Recipe'),
+                'image': recipe.get('image', ''),
+                'summary': summary[:200] + '...' if len(summary) > 200 else summary,
+                'readyInMinutes': recipe.get('readyInMinutes', 0),
+                'sourceUrl': recipe.get('sourceUrl', '')
+            }
+    except Exception as e:
+        print(f"Error fetching meal of the day: {e}")
+
+    # Get recommended diet summary
+    diet_summary = None
+    c.execute('''
+        SELECT weight, weight_unit, goal_type, target_weight 
+        FROM initial_goals 
+        WHERE user_id = ? 
+        ORDER BY created_date DESC 
+        LIMIT 1
+    ''', (user_id,))
+    user_data = c.fetchone()
+    
+    if user_data:
+        weight, weight_unit, goal_type, target_weight = user_data
+        weight_lbs = weight * 2.20462 if weight_unit == 'kg' else weight
+        
+        if goal_type == 'gain_weight':
+            calories_per_lb = 19
+            protein_per_lb = 1.0
+        elif goal_type == 'lose_weight':
+            calories_per_lb = 13
+            protein_per_lb = 1.2
+        else:
+            calories_per_lb = 15.5
+            protein_per_lb = 1.0
+        
+        target_calories = int(weight_lbs * calories_per_lb)
+        target_protein = int(weight_lbs * protein_per_lb)
+        
+        diet_summary = {
+            'goal_type': goal_type,
+            'target_calories': target_calories,
+            'target_protein': target_protein
+        }
+
     conn.close()
 
     return render_template('dashboard.html', 
                          username=session['username'],
                          daily_calories=daily_calories,
                          daily_weights=daily_weights,
+                         weight_goal=weight_goal,
                          calorie_goal=calorie_goal,
                          protein_goal=protein_goal,
                          carbs_goal=carbs_goal,
@@ -393,7 +456,9 @@ def dashboard():
                          protein_progress=round(protein_progress, 1),
                          fat_progress=round(fat_progress, 1),
                          carbs_progress=round(carbs_progress, 1),
-                         fiber_progress=round(fiber_progress, 1))
+                         fiber_progress=round(fiber_progress, 1),
+                         recipe_data=recipe_data,
+                         diet_summary=diet_summary)
 
 
 @app.route('/logout')
@@ -583,6 +648,8 @@ def meals():
 
     nutrition_data = None
     error_message = None
+    analyze_results = []
+    total_nutrition = {'calories': 0, 'protein': 0, 'fat': 0, 'carbs': 0, 'fiber': 0}
 
     # Handle adding new meal
     if request.method == 'POST' and request.form.get('action') == 'add_meal':
@@ -591,7 +658,6 @@ def meals():
         food_name = request.form.get('food_name')
 
         if quantity and unit and food_name:
-            # Combine quantity, unit, and food name for API query
             meal_query = f"{quantity} {unit} {food_name}"
             try:
                 response = requests.post(API_URL,
@@ -608,7 +674,6 @@ def meals():
                         'carbs': food['nf_total_carbohydrate']
                     }
 
-                    # Save to DB with today's date
                     conn = sqlite3.connect('cedhealth.db')
                     c = conn.cursor()
                     c.execute(
@@ -629,29 +694,106 @@ def meals():
         else:
             error_message = "Please enter quantity, unit, and food name."
 
-    # Get meals for display - default to today's date
+    # Handle meal analysis
+    elif request.method == 'POST' and request.form.get('action') == 'analyze_meal':
+        food_items = []
+        i = 0
+        while True:
+            food_item = request.form.get(f'food_item_{i}')
+            if not food_item:
+                break
+            food_items.append(food_item.strip())
+            i += 1
+        
+        if food_items:
+            combined_query = ', '.join(food_items)
+            
+            try:
+                response = requests.post(API_URL,
+                                         headers=HEADERS,
+                                         json={"query": combined_query})
+                data = response.json()
+                
+                if 'foods' in data and data['foods']:
+                    conn = sqlite3.connect('cedhealth.db')
+                    c = conn.cursor()
+                    current_date = datetime.now().date().isoformat()
+                    
+                    import uuid
+                    meal_session_id = str(uuid.uuid4())
+                    
+                    for food in data['foods']:
+                        food_nutrition = {
+                            'name': food['food_name'],
+                            'calories': food['nf_calories'],
+                            'protein': food['nf_protein'],
+                            'fat': food['nf_total_fat'],
+                            'carbs': food['nf_total_carbohydrate'],
+                            'fiber': food.get('nf_dietary_fiber', 0)
+                        }
+                        
+                        analyze_results.append(food_nutrition)
+                        
+                        total_nutrition['calories'] += food_nutrition['calories']
+                        total_nutrition['protein'] += food_nutrition['protein']
+                        total_nutrition['fat'] += food_nutrition['fat']
+                        total_nutrition['carbs'] += food_nutrition['carbs']
+                        total_nutrition['fiber'] += food_nutrition['fiber']
+
+                        c.execute(
+                            '''
+                            INSERT INTO meals (user_id, meal_name, calories, protein, fat, carbs, date, meal_session_id)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        ''',
+                            (session['user_id'], food_nutrition['name'],
+                             food_nutrition['calories'], food_nutrition['protein'],
+                             food_nutrition['fat'], food_nutrition['carbs'],
+                             current_date, meal_session_id))
+                    
+                    conn.commit()
+                    conn.close()
+                else:
+                    error_message = "Nutrition data not found for the provided items."
+            except Exception as e:
+                error_message = f"Error processing meal: {str(e)}"
+        else:
+            error_message = "Please add at least one food item."
+
+    # Get meals for display
     date_filter = request.args.get('date')
     if not date_filter:
-        date_filter = datetime.now().date().isoformat()  # Default to today
+        date_filter = datetime.now().date().isoformat()
     
     user_id = session['user_id']
     conn = sqlite3.connect('cedhealth.db')
     c = conn.cursor()
     
-    # Always filter by date (either selected or today)
     c.execute('SELECT * FROM meals WHERE user_id = ? AND date = ? ORDER BY id DESC',
               (user_id, date_filter))
     meals_by_user = c.fetchall()
     
-    # Get macronutrient totals for the filtered date
     c.execute('SELECT SUM(protein), SUM(carbs), SUM(fat) FROM meals WHERE user_id = ? AND date = ?',
               (user_id, date_filter))
     macro_totals = c.fetchone()
     
-    # Get user's macronutrient goals
     c.execute('SELECT protein_goal, carbs_goal, fat_goal FROM goals WHERE user_id = ?', (user_id,))
     macro_goals = c.fetchone()
     
+    # Get saved meals
+    c.execute('''
+        SELECT sm.id, sm.meal_name, sm.created_date,
+               SUM(smi.calories) as total_calories,
+               SUM(smi.protein) as total_protein,
+               SUM(smi.fat) as total_fat,
+               SUM(smi.carbs) as total_carbs
+        FROM saved_meals sm
+        LEFT JOIN saved_meal_items smi ON sm.id = smi.saved_meal_id
+        WHERE sm.user_id = ?
+        GROUP BY sm.id, sm.meal_name, sm.created_date
+        ORDER BY sm.created_date DESC
+    ''', (user_id,))
+    
+    saved_meals_data = c.fetchall()
     conn.close()
 
     return render_template('meals.html',
@@ -661,7 +803,10 @@ def meals():
                            error_message=error_message,
                            macro_totals=macro_totals,
                            macro_goals=macro_goals,
-                           current_date=datetime.now().date().isoformat())
+                           current_date=datetime.now().date().isoformat(),
+                           saved_meals=saved_meals_data,
+                           analyze_results=analyze_results,
+                           total_nutrition=total_nutrition)
 
 
 @app.route('/delete_meal/<int:meal_id>', methods=['GET', 'POST'])
@@ -845,21 +990,23 @@ def log_saved_meal(saved_meal_id):
     return redirect(url_for('meals'))
 
 
-@app.route('/food_facts', methods=['GET', 'POST'])
-def food_facts():
+@app.route('/explore_foods', methods=['GET', 'POST'])
+def explore_foods():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
     error_message = None
+    product_info = None
+    food_nutrition = None
     
-    if request.method == 'POST':
+    # Handle barcode scanning
+    if request.method == 'POST' and request.form.get('action') == 'scan_barcode':
         barcode = request.form.get('barcode', '').strip()
         
         if not barcode:
             error_message = "Please enter a barcode."
         else:
             try:
-                # Fetch data from Open Food Facts API
                 url = f"https://world.openfoodfacts.org/api/v0/product/{barcode}.json"
                 response = requests.get(url)
                 data = response.json()
@@ -867,7 +1014,6 @@ def food_facts():
                 if data.get('status') == 1 and 'product' in data:
                     product = data['product']
                     
-                    # Extract product information
                     product_info = {
                         'name': product.get('product_name', 'Unknown Product'),
                         'brand': product.get('brands', 'Unknown Brand'),
@@ -878,23 +1024,55 @@ def food_facts():
                         'barcode': barcode,
                         'image_url': product.get('image_url', '')
                     }
-                    
-                    return render_template('food_facts_result.html', product=product_info)
                 else:
                     error_message = f"Product with barcode {barcode} not found in the database."
                     
             except Exception as e:
                 error_message = f"Error fetching product data: {str(e)}"
     
-    return render_template('food_facts_form.html', error_message=error_message)
+    # Handle food lookup
+    elif request.method == 'POST' and request.form.get('action') == 'lookup_food':
+        food_query = request.form.get('food_query', '').strip()
+        
+        if not food_query:
+            error_message = "Please enter a food name."
+        else:
+            try:
+                response = requests.post(API_URL,
+                                         headers=HEADERS,
+                                         json={"query": food_query})
+                data = response.json()
+                
+                if 'foods' in data and data['foods']:
+                    food = data['foods'][0]
+                    food_nutrition = {
+                        'name': food['food_name'],
+                        'calories': food['nf_calories'],
+                        'protein': food['nf_protein'],
+                        'fat': food['nf_total_fat'],
+                        'carbs': food['nf_total_carbohydrate'],
+                        'fiber': food.get('nf_dietary_fiber', 0),
+                        'sugar': food.get('nf_sugars', 0),
+                        'sodium': food.get('nf_sodium', 0)
+                    }
+                else:
+                    error_message = "Nutrition data not found for the provided food."
+            except Exception as e:
+                error_message = f"Error fetching nutrition data: {str(e)}"
+    
+    return render_template('explore_foods.html', 
+                         error_message=error_message, 
+                         product_info=product_info,
+                         food_nutrition=food_nutrition)
 
 
-@app.route('/exercises')
-def exercises():
+@app.route('/workouts')
+def workouts():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
     exercises_data = []
+    gif_exercises_data = []
     categories_data = []
     error_message = None
     selected_category = request.args.get('category', '')
@@ -912,46 +1090,53 @@ def exercises():
                     'name': category.get('name', 'Unknown Category')
                 })
         
-        # Build exercises URL with optional category filter
-        exercises_url = "https://wger.de/api/v2/exercise/?language=2&limit=15"
+        # Fetch regular exercises
+        exercises_url = "https://wger.de/api/v2/exercise/?language=2&limit=10"
         if selected_category:
             exercises_url += f"&category={selected_category}"
             
         exercises_response = requests.get(exercises_url)
         exercises_json = exercises_response.json()
         
-        # Fetch exercise images
-        images_url = "https://wger.de/api/v2/exerciseimage/"
-        images_response = requests.get(images_url)
-        images_json = images_response.json()
-        
-        # Create a mapping of exercise ID to images
-        exercise_images = {}
-        if 'results' in images_json:
-            for image in images_json['results']:
-                exercise_id = image.get('exercise')
-                if exercise_id not in exercise_images:
-                    exercise_images[exercise_id] = []
-                exercise_images[exercise_id].append(image.get('image', ''))
-        
-        # Process exercises
         if 'results' in exercises_json:
             for exercise in exercises_json['results']:
-                exercise_id = exercise.get('id')
                 exercise_data = {
-                    'id': exercise_id,
                     'name': exercise.get('name', 'Unknown Exercise'),
                     'description': exercise.get('description', 'No description available'),
-                    'category': exercise.get('category', 'Unknown Category'),
-                    'images': exercise_images.get(exercise_id, [])
+                    'category': exercise.get('category', 'Unknown Category')
                 }
                 exercises_data.append(exercise_data)
+        
+        # Fetch GIF exercises from ExerciseDB
+        gif_url = "https://exercisedb.p.rapidapi.com/exercises?limit=8"
+        gif_headers = {
+            "x-rapidapi-key": "e5ab48f2b8msh50c42a50dce5e64p1592edjsn1ad068fbd807",
+            "x-rapidapi-host": "exercisedb.p.rapidapi.com"
+        }
+        
+        gif_response = requests.get(gif_url, headers=gif_headers)
+        gif_response.raise_for_status()
+        
+        gif_exercises_json = gif_response.json()
+        
+        if isinstance(gif_exercises_json, list):
+            for exercise in gif_exercises_json:
+                if isinstance(exercise, dict):
+                    exercise_data = {
+                        'name': exercise.get('name', 'Unknown Exercise'),
+                        'bodyPart': exercise.get('bodyPart', 'Unknown Body Part'),
+                        'equipment': exercise.get('equipment', 'Unknown Equipment'),
+                        'target': exercise.get('target', 'Unknown Target'),
+                        'gifUrl': exercise.get('gifUrl', '')
+                    }
+                    gif_exercises_data.append(exercise_data)
     
     except Exception as e:
         error_message = f"Error fetching exercises: {str(e)}"
     
-    return render_template('exercises.html', 
-                         exercises=exercises_data, 
+    return render_template('workouts.html', 
+                         exercises=exercises_data,
+                         gif_exercises=gif_exercises_data,
                          categories=categories_data,
                          selected_category=selected_category,
                          error_message=error_message)
