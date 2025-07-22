@@ -132,6 +132,9 @@
             cursor: pointer;
             border-bottom: 1px solid #f1f5f9;
             transition: background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .dropdown-item:hover {
@@ -142,15 +145,49 @@
             border-bottom: none;
         }
 
+        .dropdown-item-image {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #f3f4f6;
+        }
+
+        .dropdown-item-content {
+            flex: 1;
+        }
+
         .dropdown-item .food-name {
             font-weight: 500;
             color: #1f2937;
+            line-height: 1.2;
         }
 
         .dropdown-item .brand-name {
             font-size: 0.85rem;
             color: #6b7280;
             margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .source-badge {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .source-nutritionix {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .source-openfoodfacts {
+            background: #f0fdf4;
+            color: #166534;
         }
 
         .remove-item {
@@ -552,8 +589,14 @@
                                     const div = document.createElement('div');
                                     div.className = 'dropdown-item';
                                     div.innerHTML = `
-                                        <div class="food-name">${item.food_name}</div>
-                                        <div class="brand-name">Common Food</div>
+                                        ${item.photo ? `<img src="${item.photo}" class="dropdown-item-image" onerror="this.style.display='none'">` : '<div class="dropdown-item-image">🍽️</div>'}
+                                        <div class="dropdown-item-content">
+                                            <div class="food-name">${item.food_name}</div>
+                                            <div class="brand-name">
+                                                Common Food
+                                                <span class="source-badge source-nutritionix">Nutritionix</span>
+                                            </div>
+                                        </div>
                                     `;
                                     div.addEventListener('click', () => {
                                         input.value = item.food_name;
@@ -568,12 +611,23 @@
                                 data.branded.forEach(item => {
                                     const div = document.createElement('div');
                                     div.className = 'dropdown-item';
+                                    
+                                    const sourceBadgeClass = item.source === 'openfoodfacts' ? 'source-openfoodfacts' : 'source-nutritionix';
+                                    const sourceName = item.source === 'openfoodfacts' ? 'OpenFoodFacts' : 'Nutritionix';
+                                    
                                     div.innerHTML = `
-                                        <div class="food-name">${item.food_name}</div>
-                                        <div class="brand-name">${item.brand_name}</div>
+                                        ${item.photo ? `<img src="${item.photo}" class="dropdown-item-image" onerror="this.style.display='none'">` : '<div class="dropdown-item-image">🏷️</div>'}
+                                        <div class="dropdown-item-content">
+                                            <div class="food-name">${item.food_name}</div>
+                                            <div class="brand-name">
+                                                ${item.brand_name}
+                                                <span class="source-badge ${sourceBadgeClass}">${sourceName}</span>
+                                            </div>
+                                        </div>
                                     `;
                                     div.addEventListener('click', () => {
-                                        input.value = item.food_name;
+                                        // For branded items, include brand name in the selection
+                                        input.value = `${item.brand_name} ${item.food_name}`;
                                         dropdown.style.display = 'none';
                                     });
                                     dropdown.appendChild(div);

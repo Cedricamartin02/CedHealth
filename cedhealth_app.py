@@ -437,6 +437,7 @@ def search_foods():
         return {'common': [], 'branded': []}
     
     try:
+        # Try Nutritionix first
         response = requests.get(SEARCH_URL, 
                                headers=HEADERS, 
                                params={'query': query})
@@ -453,7 +454,8 @@ def search_foods():
                 result['common'].append({
                     'food_name': item['food_name'],
                     'tag_name': item.get('tag_name', ''),
-                    'photo': item.get('photo', {}).get('thumb', '')
+                    'photo': item.get('photo', {}).get('thumb', ''),
+                    'source': 'nutritionix'
                 })
         
         if 'branded' in data:
@@ -461,8 +463,29 @@ def search_foods():
                 result['branded'].append({
                     'food_name': item['food_name'],
                     'brand_name': item.get('brand_name', ''),
-                    'photo': item.get('photo', {}).get('thumb', '')
+                    'photo': item.get('photo', {}).get('thumb', ''),
+                    'source': 'nutritionix'
                 })
+        
+        # If Nutritionix returns no branded results, try Open Food Facts as fallback
+        if not result['branded'] and len(result['common']) < 3:
+            try:
+                # Search Open Food Facts
+                openfoodfacts_url = f"https://world.openfoodfacts.org/cgi/search.pl?search_terms={query}&search_simple=1&action=process&json=1&page_size=5"
+                openfoodfacts_response = requests.get(openfoodfacts_url, timeout=3)
+                openfoodfacts_data = openfoodfacts_response.json()
+                
+                if 'products' in openfoodfacts_data:
+                    for product in openfoodfacts_data['products'][:3]:  # Limit to 3 items
+                        if product.get('product_name') and product.get('brands'):
+                            result['branded'].append({
+                                'food_name': product['product_name'],
+                                'brand_name': product.get('brands', '').split(',')[0],  # Get first brand
+                                'photo': product.get('image_thumb_url', ''),
+                                'source': 'openfoodfacts'
+                            })
+            except:
+                pass  # Ignore Open Food Facts errors, just use Nutritionix results
         
         return result
     except Exception as e:
