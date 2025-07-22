@@ -1046,6 +1046,109 @@ def meal_of_the_day():
     return render_template('meal_of_the_day.html', recipe=recipe_data, error_message=error_message)
 
 
+@app.route('/recommended_diet')
+def recommended_diet():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    user_id = session['user_id']
+    conn = sqlite3.connect('cedhealth.db')
+    c = conn.cursor()
+    
+    # Get user's initial goals and current weight
+    c.execute('''
+        SELECT weight, weight_unit, goal_type, target_weight 
+        FROM initial_goals 
+        WHERE user_id = ? 
+        ORDER BY created_date DESC 
+        LIMIT 1
+    ''', (user_id,))
+    user_data = c.fetchone()
+    conn.close()
+    
+    if not user_data:
+        return render_template('recommended_diet.html', 
+                             error_message="Please complete your initial goals setup first.",
+                             meal_plan=None, macros=None)
+    
+    weight, weight_unit, goal_type, target_weight = user_data
+    
+    # Convert weight to lbs if needed
+    weight_lbs = weight * 2.20462 if weight_unit == 'kg' else weight
+    
+    # Calculate macros based on goal
+    if goal_type == 'gain_weight':  # Bulk
+        calories_per_lb = 19  # Average of 18-20
+        protein_per_lb = 1.0
+        fat_per_lb = 0.4
+    elif goal_type == 'lose_weight':  # Cut
+        calories_per_lb = 13  # Average of 12-14
+        protein_per_lb = 1.2
+        fat_per_lb = 0.3  # Conservative estimate
+    else:  # Maintain
+        calories_per_lb = 15.5  # Average of 15-16
+        protein_per_lb = 1.0
+        fat_per_lb = 0.35  # Conservative estimate
+    
+    # Calculate daily targets
+    target_calories = int(weight_lbs * calories_per_lb)
+    target_protein = int(weight_lbs * protein_per_lb)
+    target_fat = int(weight_lbs * fat_per_lb)
+    
+    # Calculate carbs (rest of calories after protein and fat)
+    protein_calories = target_protein * 4
+    fat_calories = target_fat * 9
+    carb_calories = target_calories - protein_calories - fat_calories
+    target_carbs = int(carb_calories / 4)
+    
+    macros = {
+        'calories': target_calories,
+        'protein': target_protein,
+        'fat': target_fat,
+        'carbs': target_carbs,
+        'goal_type': goal_type
+    }
+    
+    # Get meal plan from Spoonacular
+    meal_plan = None
+    error_message = None
+    
+    try:
+        # Call Spoonacular meal planner API
+        url = "https://api.spoonacular.com/mealplanner/generate"
+        params = {
+            'timeFrame': 'day',
+            'targetCalories': target_calories,
+            'apiKey': '669ab752fed34d5ea3f9b188b1983b8b'
+        }
+        
+        response = requests.get(url, params=params)
+        data = response.json()
+        
+        if 'meals' in data:
+            meal_plan = []
+            for meal in data['meals']:
+                meal_info = {
+                    'id': meal.get('id'),
+                    'title': meal.get('title', 'Unknown Meal'),
+                    'readyInMinutes': meal.get('readyInMinutes', 0),
+                    'servings': meal.get('servings', 1),
+                    'sourceUrl': meal.get('sourceUrl', ''),
+                    'image': f"https://spoonacular.com/recipeImages/{meal.get('id')}-312x231.jpg" if meal.get('id') else ''
+                }
+                meal_plan.append(meal_info)
+        else:
+            error_message = "Could not generate meal plan. Please try again."
+            
+    except Exception as e:
+        error_message = f"Error fetching meal plan: {str(e)}"
+    
+    return render_template('recommended_diet.html', 
+                         macros=macros, 
+                         meal_plan=meal_plan, 
+                         error_message=error_message)
+
+
 # ---------- RUN ----------
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)

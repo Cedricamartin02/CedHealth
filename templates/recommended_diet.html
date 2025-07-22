@@ -1,0 +1,528 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recommended Diet - CedHealth</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #000;
+            color: #ffffff;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(220, 38, 38, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(127, 29, 29, 0.1) 0%, transparent 50%);
+            z-index: -1;
+        }
+
+        .navbar {
+            background: rgba(20, 20, 20, 0.95);
+            border-bottom: 2px solid rgba(220, 38, 38, 0.3);
+            box-shadow: 0 0 30px rgba(220, 38, 38, 0.2);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 80px;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            color: #dc2626;
+            font-size: 2rem;
+        }
+
+        .logo-text {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 10px 20px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .nav-link:hover {
+            color: #dc2626;
+            background: rgba(220, 38, 38, 0.1);
+            border-color: rgba(220, 38, 38, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #dc2626;
+            border: 2px solid #dc2626;
+        }
+
+        .btn-outline:hover {
+            background: #dc2626;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(220, 38, 38, 0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 30px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px rgba(220, 38, 38, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: rgba(220, 38, 38, 0.8);
+            font-weight: 500;
+        }
+
+        .card {
+            background: rgba(20, 20, 20, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(220, 38, 38, 0.2);
+            border: 2px solid rgba(220, 38, 38, 0.3);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            margin-bottom: 40px;
+        }
+
+        .card-header {
+            padding: 30px 30px 20px;
+            border-bottom: 1px solid rgba(220, 38, 38, 0.2);
+        }
+
+        .card-header h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
+        }
+
+        .card-subtitle {
+            color: rgba(220, 38, 38, 0.8);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .card-body {
+            padding: 30px;
+        }
+
+        .macros-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .macro-card {
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(127, 29, 29, 0.1) 100%);
+            border: 2px solid rgba(220, 38, 38, 0.3);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(220, 38, 38, 0.15);
+        }
+
+        .macro-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #dc2626;
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
+        }
+
+        .macro-label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .macro-unit {
+            font-size: 0.9rem;
+            color: rgba(220, 38, 38, 0.6);
+            margin-left: 4px;
+        }
+
+        .goal-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+        }
+
+        .meal-plan-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .meal-card {
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.05) 0%, rgba(127, 29, 29, 0.05) 100%);
+            border: 2px solid rgba(220, 38, 38, 0.2);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .meal-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(220, 38, 38, 0.3);
+            border-color: rgba(220, 38, 38, 0.5);
+        }
+
+        .meal-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .meal-content {
+            padding: 25px;
+        }
+
+        .meal-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .meal-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .meal-time {
+            color: rgba(220, 38, 38, 0.8);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .meal-servings {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        .meal-link {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+
+        .meal-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(220, 38, 38, 0.4);
+        }
+
+        .error-message {
+            background: rgba(220, 38, 38, 0.1);
+            border: 2px solid rgba(220, 38, 38, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            color: #dc2626;
+            font-weight: 500;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .no-data a {
+            color: #dc2626;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .no-data a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .nav-container {
+                padding: 0 20px;
+                height: auto;
+                min-height: 80px;
+                flex-direction: column;
+                gap: 20px;
+                padding-top: 20px;
+                padding-bottom: 20px;
+            }
+            
+            .nav-left {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 15px;
+            }
+            
+            .container {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .macros-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+            
+            .meal-plan-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .card-header,
+            .card-body {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .macros-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .macro-value {
+                font-size: 2rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-left">
+                <div class="logo">
+                    <div class="logo-icon">🏥</div>
+                    <span class="logo-text">CedHealth</span>
+                </div>
+            </div>
+            <div class="nav-right">
+                <div class="nav-links">
+                    <a href="/dashboard" class="nav-link">Dashboard</a>
+                    <a href="/goals" class="nav-link">Goals</a>
+                    <a href="/meals" class="nav-link">Meals</a>
+                    <a href="/analyze_meal" class="nav-link">Analyze Meal</a>
+                    <a href="/logout" class="btn btn-outline">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>🍽️ Recommended Diet</h1>
+            <p>Personalized nutrition plan based on your goals</p>
+        </div>
+
+        {% if error_message %}
+            <div class="error-message">
+                {{ error_message }}
+            </div>
+        {% elif not macros %}
+            <div class="card">
+                <div class="card-body">
+                    <div class="no-data">
+                        <h3>No diet recommendations available</h3>
+                        <p><a href="/initial_goals">Complete your initial goals setup</a> to get personalized diet recommendations.</p>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <!-- Macros Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📊 Your Daily Targets</h2>
+                    <p class="card-subtitle">
+                        Calculated for your 
+                        {% if macros.goal_type == 'gain_weight' %}
+                            <span class="goal-badge">Bulk Goal</span>
+                        {% elif macros.goal_type == 'lose_weight' %}
+                            <span class="goal-badge">Cut Goal</span>
+                        {% else %}
+                            <span class="goal-badge">Maintenance Goal</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="card-body">
+                    <div class="macros-grid">
+                        <div class="macro-card">
+                            <div class="macro-value">{{ macros.calories }}<span class="macro-unit">cal</span></div>
+                            <div class="macro-label">Calories</div>
+                        </div>
+                        <div class="macro-card">
+                            <div class="macro-value">{{ macros.protein }}<span class="macro-unit">g</span></div>
+                            <div class="macro-label">Protein</div>
+                        </div>
+                        <div class="macro-card">
+                            <div class="macro-value">{{ macros.carbs }}<span class="macro-unit">g</span></div>
+                            <div class="macro-label">Carbs</div>
+                        </div>
+                        <div class="macro-card">
+                            <div class="macro-value">{{ macros.fat }}<span class="macro-unit">g</span></div>
+                            <div class="macro-label">Fat</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Meal Plan Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>🍴 Today's Meal Plan</h2>
+                    <p class="card-subtitle">AI-generated meals matching your macro targets</p>
+                </div>
+                <div class="card-body">
+                    {% if meal_plan %}
+                        <div class="meal-plan-grid">
+                            {% for meal in meal_plan %}
+                                <div class="meal-card">
+                                    {% if meal.image %}
+                                        <img src="{{ meal.image }}" alt="{{ meal.title }}" class="meal-image">
+                                    {% endif %}
+                                    <div class="meal-content">
+                                        <h3 class="meal-title">{{ meal.title }}</h3>
+                                        <div class="meal-details">
+                                            <span class="meal-time">⏱️ {{ meal.readyInMinutes }} min</span>
+                                            <span class="meal-servings">🍽️ {{ meal.servings }} serving{{ 's' if meal.servings != 1 else '' }}</span>
+                                        </div>
+                                        {% if meal.sourceUrl %}
+                                            <a href="{{ meal.sourceUrl }}" target="_blank" class="meal-link">View Recipe</a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="no-data">
+                            <h3>No meal plan available</h3>
+                            <p>Unable to generate meal plan at this time. Please try again later.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
