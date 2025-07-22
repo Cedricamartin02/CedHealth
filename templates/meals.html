@@ -99,7 +99,7 @@
             </div>
 
             <!-- Filter Section -->
-            <div class="filter-section"></div>
+            <div class="filter-section">
                 <div class="section-card">
                     <h2>📅 Filter Meals</h2>
                     <form method="GET" class="filter-form">
@@ -108,9 +108,19 @@
                                 <input type="date" id="date" name="date" value="{{ selected_date or '' }}">
                             </div>
                             <button type="submit" class="btn btn-secondary">Filter by Date</button>
-                            <a href="{{ url_for('meals') }}" class="btn btn-outline">Show All</a>
+                            <a href="{{ url_for('meals') }}" class="btn btn-outline">Today's Meals</a>
                         </div>
                     </form>
+                    <div class="current-date-info">
+                        <p><strong>Showing meals for:</strong> 
+                            {% if selected_date %}
+                                {{ selected_date }}
+                                {% if selected_date == moment().strftime('%Y-%m-%d') %}(Today){% endif %}
+                            {% else %}
+                                Today ({{ moment().strftime('%Y-%m-%d') }})
+                            {% endif %}
+                        </p>
+                    </div>
                 </div>
             </div>
 
@@ -261,6 +271,21 @@
         .no-goals-message a:hover {
             color: #92400e;
             text-decoration: underline;
+        }
+
+        .current-date-info {
+            margin-top: 15px;
+            padding: 12px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            border-left: 4px solid #4f46e5;
+        }
+
+        .current-date-info p {
+            margin: 0;
+            color: #475569;
+            font-size: 0.9rem;
+            font-weight: 500;
         }
 
         .section-card {

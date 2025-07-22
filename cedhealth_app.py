@@ -585,7 +585,7 @@ def meals():
                         'carbs': food['nf_total_carbohydrate']
                     }
 
-                    # Save to DB
+                    # Save to DB with today's date
                     conn = sqlite3.connect('cedhealth.db')
                     c = conn.cursor()
                     c.execute(
@@ -606,24 +606,23 @@ def meals():
         else:
             error_message = "Please enter quantity, unit, and food name."
 
-    # Get meals for display
+    # Get meals for display - default to today's date
     date_filter = request.args.get('date')
+    if not date_filter:
+        date_filter = datetime.now().date().isoformat()  # Default to today
+    
     user_id = session['user_id']
     conn = sqlite3.connect('cedhealth.db')
     c = conn.cursor()
-    if date_filter:
-        c.execute('SELECT * FROM meals WHERE user_id = ? AND date = ?',
-                  (user_id, date_filter))
-    else:
-        c.execute('SELECT * FROM meals WHERE user_id = ?', (user_id, ))
+    
+    # Always filter by date (either selected or today)
+    c.execute('SELECT * FROM meals WHERE user_id = ? AND date = ? ORDER BY id DESC',
+              (user_id, date_filter))
     meals_by_user = c.fetchall()
     
-    # Get macronutrient totals for filtered meals
-    if date_filter:
-        c.execute('SELECT SUM(protein), SUM(carbs), SUM(fat) FROM meals WHERE user_id = ? AND date = ?',
-                  (user_id, date_filter))
-    else:
-        c.execute('SELECT SUM(protein), SUM(carbs), SUM(fat) FROM meals WHERE user_id = ?', (user_id, ))
+    # Get macronutrient totals for the filtered date
+    c.execute('SELECT SUM(protein), SUM(carbs), SUM(fat) FROM meals WHERE user_id = ? AND date = ?',
+              (user_id, date_filter))
     macro_totals = c.fetchone()
     
     # Get user's macronutrient goals
@@ -808,7 +807,7 @@ def log_saved_meal(saved_meal_id):
     if meal_items:
         current_date = datetime.now().date().isoformat()
         
-        # Log each item as a separate meal entry
+        # Log each item as a separate meal entry with today's date
         for item in meal_items:
             food_name, calories, protein, fat, carbs = item
             c.execute('''
