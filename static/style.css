@@ -36,9 +36,9 @@
     --bg-tertiary: var(--gray-100);
     
     /* Text */
-    --text-primary: var(--gray-900);
-    --text-secondary: var(--gray-600);
-    --text-tertiary: var(--gray-500);
+    --text-primary: #ffffff;
+    --text-secondary: #ffffff;
+    --text-tertiary: #ffffff;
     
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -64,7 +64,7 @@
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     line-height: 1.6;
-    color: var(--text-primary);
+    color: #ffffff;
     background-color: var(--bg-secondary);
     min-height: 100vh;
 }
@@ -175,7 +175,7 @@ body {
 .card-header h3 {
     font-size: 1.25rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: #ffffff;
     margin-bottom: var(--space-xs);
 }
 
@@ -268,14 +268,14 @@ body {
     display: block;
     font-size: 1.25rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: #ffffff;
 }
 
 .progress-label {
     display: block;
     font-size: 0.875rem;
     font-weight: 600;
-    color: var(--text-secondary);
+    color: #ffffff;
     margin: 2px 0;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -284,7 +284,7 @@ body {
 .progress-goal {
     display: block;
     font-size: 0.75rem;
-    color: var(--text-tertiary);
+    color: #ffffff;
 }
 
 .progress-bar {
@@ -361,7 +361,7 @@ body {
 .form-group label {
     display: block;
     margin-bottom: var(--space-xs);
-    color: var(--text-primary);
+    color: #ffffff;
     font-weight: 500;
     font-size: 0.875rem;
 }
@@ -379,9 +379,9 @@ textarea {
     border: 1px solid var(--gray-300);
     border-radius: var(--radius-md);
     background: var(--bg-primary);
-    color: var(--text-primary);
+    color: #ffffff;
     transition: all 0.2s ease;
-    font-family: inherit;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 input:focus,
@@ -447,7 +447,7 @@ th, td {
 th {
     background: var(--gray-50);
     font-weight: 600;
-    color: var(--text-primary);
+    color: #ffffff;
     text-transform: uppercase;
     font-size: 0.75rem;
     letter-spacing: 0.5px;
@@ -466,6 +466,12 @@ a {
 
 a:hover {
     color: var(--primary-dark);
+}
+
+/* Global text styling */
+h1, h2, h3, h4, h5, h6, p, span, div, label, button, a, li, td, th {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #ffffff;
 }
 
 /* Utilities */
