@@ -578,14 +578,27 @@
                         <canvas id="weightChart"></canvas>
                         <div class="weight-input-section">
                             <div class="weight-input-card">
-                                <h4>📊 Enter your weight for today</h4>
-                                <form method="POST" action="/log_weight" class="weight-form">
-                                    <div class="input-group">
-                                        <input type="number" name="weight" placeholder="Weight (kg)" step="0.1" required 
-                                               class="weight-input">
-                                        <button type="submit" class="btn btn-primary weight-save-btn">Save Weight</button>
-                                    </div>
-                                </form>
+                                {% if today_weight %}
+                                    <h4>📊 Today's Weight: {{ today_weight }}kg</h4>
+                                    <p style="color: rgba(220, 38, 38, 0.7); margin-bottom: 15px;">{{ today_date }}</p>
+                                    <form method="POST" action="/log_weight" class="weight-form">
+                                        <div class="input-group">
+                                            <input type="number" name="weight" placeholder="Update weight (kg)" value="{{ today_weight }}" step="0.1" required 
+                                                   class="weight-input">
+                                            <button type="submit" class="btn btn-primary weight-save-btn">Update Weight</button>
+                                        </div>
+                                    </form>
+                                {% else %}
+                                    <h4>📊 Enter your weight for today</h4>
+                                    <p style="color: rgba(220, 38, 38, 0.7); margin-bottom: 15px;">{{ today_date }}</p>
+                                    <form method="POST" action="/log_weight" class="weight-form">
+                                        <div class="input-group">
+                                            <input type="number" name="weight" placeholder="Weight (kg)" step="0.1" required 
+                                                   class="weight-input">
+                                            <button type="submit" class="btn btn-primary weight-save-btn">Save Weight</button>
+                                        </div>
+                                    </form>
+                                {% endif %}
                             </div>
                         </div>
                     </div>

@@ -367,6 +367,11 @@ def dashboard():
     current_fat = nutrition_totals[1] if nutrition_totals[1] else 0
     current_carbs = nutrition_totals[2] if nutrition_totals[2] else 0
     
+    # Get today's weight if logged
+    c.execute('SELECT weight FROM weight_logs WHERE user_id = ? AND date = ?', (user_id, today))
+    today_weight = c.fetchone()
+    today_weight = today_weight[0] if today_weight else None
+    
     # Calculate fiber (approximate: 3g per 100g carbs)
     current_fiber = round((current_carbs / 100) * 3, 1)
 
@@ -458,7 +463,9 @@ def dashboard():
                          carbs_progress=round(carbs_progress, 1),
                          fiber_progress=round(fiber_progress, 1),
                          recipe_data=recipe_data,
-                         diet_summary=diet_summary)
+                         diet_summary=diet_summary,
+                         today_weight=today_weight,
+                         today_date=today)
 
 
 @app.route('/logout')
