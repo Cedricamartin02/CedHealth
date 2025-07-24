@@ -67,6 +67,16 @@ def init_db():
     ''')
     
     c.execute('''
+        CREATE TABLE IF NOT EXISTS daily_weights (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            weight REAL,
+            date TEXT,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+    
+    c.execute('''
         CREATE TABLE IF NOT EXISTS saved_meals (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
@@ -347,7 +357,7 @@ def dashboard():
     # Get daily weight for the past 7 days
     c.execute('''
         SELECT date, weight 
-        FROM weight_logs 
+        FROM daily_weights 
         WHERE user_id = ? 
         AND date >= date('now', '-7 days')
         ORDER BY date
@@ -368,7 +378,7 @@ def dashboard():
     current_carbs = nutrition_totals[2] if nutrition_totals[2] else 0
     
     # Get today's weight if logged
-    c.execute('SELECT weight FROM weight_logs WHERE user_id = ? AND date = ?', (user_id, today))
+    c.execute('SELECT weight FROM daily_weights WHERE user_id = ? AND date = ?', (user_id, today))
     today_weight = c.fetchone()
     today_weight = today_weight[0] if today_weight else None
     
@@ -842,12 +852,19 @@ def log_weight():
         
         # Delete existing weight log for today if it exists
         today = datetime.now().date().isoformat()
-        c.execute('DELETE FROM weight_logs WHERE user_id = ? AND date = ?',
+        c.execute('DELETE FROM daily_weights WHERE user_id = ? AND date = ?',
                   (session['user_id'], today))
         
         # Insert new weight log
+        c.execute('INSERT INTO daily_weights (user_id, weight, date) VALUES (?, ?, ?)',
+                  (session['user_id'], weight, today))
+        
+        # Also update the old weight_logs table for backward compatibility
+        c.execute('DELETE FROM weight_logs WHERE user_id = ? AND date = ?',
+                  (session['user_id'], today))
         c.execute('INSERT INTO weight_logs (user_id, weight, date) VALUES (?, ?, ?)',
                   (session['user_id'], weight, today))
+        
         conn.commit()
         conn.close()
 
