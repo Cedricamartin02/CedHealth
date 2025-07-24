@@ -636,3 +636,31 @@ h1, h2, h3, h4, h5, h6, p, span, div, label, button, a, li, td, th {
 .auth-footer a {
     font-weight: 500;
 }
+.logo-wrapper {
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 999;
+}
+
+.logo-wrapper img {
+  height: 60px;
+  margin-right: 12px;
+}
+
+.brand-text h1 {
+  margin: 0;
+  font-size: 24px;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.brand-text .tagline {
+  margin: 0;
+  font-size: 12px;
+  color: #cccccc;
+  letter-spacing: 1px;
+}
