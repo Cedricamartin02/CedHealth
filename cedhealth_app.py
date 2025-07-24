@@ -846,24 +846,31 @@ def log_weight():
         return redirect(url_for('login'))
 
     weight = request.form.get('weight', type=float)
-    if weight:
+    if weight and 50 <= weight <= 999:  # Basic validation
         conn = sqlite3.connect('cedhealth.db')
         c = conn.cursor()
         
-        # Delete existing weight log for today if it exists
+        # Use INSERT OR REPLACE for upsert functionality
         today = datetime.now().date().isoformat()
-        c.execute('DELETE FROM daily_weights WHERE user_id = ? AND date = ?',
-                  (session['user_id'], today))
+        user_id = session['user_id']
         
-        # Insert new weight log
-        c.execute('INSERT INTO daily_weights (user_id, weight, date) VALUES (?, ?, ?)',
-                  (session['user_id'], weight, today))
+        # Check if record exists for today
+        c.execute('SELECT id FROM daily_weights WHERE user_id = ? AND date = ?', (user_id, today))
+        existing = c.fetchone()
+        
+        if existing:
+            # Update existing record
+            c.execute('UPDATE daily_weights SET weight = ? WHERE user_id = ? AND date = ?',
+                      (weight, user_id, today))
+        else:
+            # Insert new record
+            c.execute('INSERT INTO daily_weights (user_id, weight, date) VALUES (?, ?, ?)',
+                      (user_id, weight, today))
         
         # Also update the old weight_logs table for backward compatibility
-        c.execute('DELETE FROM weight_logs WHERE user_id = ? AND date = ?',
-                  (session['user_id'], today))
+        c.execute('DELETE FROM weight_logs WHERE user_id = ? AND date = ?', (user_id, today))
         c.execute('INSERT INTO weight_logs (user_id, weight, date) VALUES (?, ?, ?)',
-                  (session['user_id'], weight, today))
+                  (user_id, weight, today))
         
         conn.commit()
         conn.close()

@@ -580,22 +580,22 @@
                             <div class="weight-input-card">
                                 {% if today_weight %}
                                     <h4>📊 Today's Weight: {{ today_weight }} lbs</h4>
-                                    <p style="color: rgba(220, 38, 38, 0.7); margin-bottom: 15px;">{{ today_date }}</p>
+                                    <p style="color: rgba(220, 38, 38, 0.7); margin-bottom: 15px; font-size: 0.9rem;">{{ today_date }}</p>
                                     <form method="POST" action="/log_weight" class="weight-form">
                                         <div class="input-group">
-                                            <input type="number" name="weight" placeholder="Enter Today's Weight (lbs)" value="{{ today_weight }}" step="0.1" required 
+                                            <input type="number" name="weight" placeholder="Enter Today's Weight (lbs)" value="{{ today_weight }}" step="0.1" min="50" max="999" required 
                                                    class="weight-input">
                                             <button type="submit" class="btn btn-primary weight-save-btn">Update Weight</button>
                                         </div>
                                     </form>
                                 {% else %}
                                     <h4>📊 Enter Today's Weight (lbs)</h4>
-                                    <p style="color: rgba(220, 38, 38, 0.7); margin-bottom: 15px;">{{ today_date }}</p>
+                                    <p style="color: rgba(220, 38, 38, 0.7); margin-bottom: 15px; font-size: 0.9rem;">{{ today_date }}</p>
                                     <form method="POST" action="/log_weight" class="weight-form">
                                         <div class="input-group">
-                                            <input type="number" name="weight" placeholder="Enter Today's Weight (lbs)" step="0.1" required 
+                                            <input type="number" name="weight" placeholder="Enter Today's Weight (lbs)" step="0.1" min="50" max="999" required 
                                                    class="weight-input">
-                                            <button type="submit" class="btn btn-primary weight-save-btn">Save Weight</button>
+                                            <button type="submit" class="btn btn-primary weight-save-btn">Submit</button>
                                         </div>
                                     </form>
                                 {% endif %}
