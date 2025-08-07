@@ -1,0 +1,7 @@
+
+<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+  <rect width="60" height="60" rx="12" fill="#FF3C38"/>
+  <text x="30" y="38" text-anchor="middle" font-family="Poppins, sans-serif" font-size="24" font-weight="bold" fill="white">K</text>
+  <circle cx="15" cy="15" r="3" fill="white" opacity="0.8"/>
+  <circle cx="45" cy="45" r="3" fill="white" opacity="0.8"/>
+</svg>
