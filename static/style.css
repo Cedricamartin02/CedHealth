@@ -13,20 +13,20 @@
 
 :root {
     /* Modern Color Palette */
-    --primary-bg: #121212;
-    --secondary-bg: #1e1e1e;
-    --tertiary-bg: #2a2a2a;
-    --accent-color: #FF3C38;
-    --accent-hover: #e63530;
-    --link-color: #00B4D8;
-    --link-hover: #0096c7;
-    --text-primary: #ffffff;
-    --text-secondary: #b3b3b3;
-    --text-muted: #888888;
-    --border-color: #333333;
-    --shadow-light: rgba(255, 60, 56, 0.1);
-    --shadow-medium: rgba(0, 0, 0, 0.3);
-    --shadow-heavy: rgba(0, 0, 0, 0.5);
+    --primary-bg: #ffffff;
+    --secondary-bg: #f8fafc;
+    --tertiary-bg: #e2e8f0;
+    --accent-color: #3b82f6;
+    --accent-hover: #2563eb;
+    --link-color: #1d4ed8;
+    --link-hover: #1e40af;
+    --text-primary: #1e293b;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    --border-color: #cbd5e1;
+    --shadow-light: rgba(59, 130, 246, 0.1);
+    --shadow-medium: rgba(0, 0, 0, 0.1);
+    --shadow-heavy: rgba(0, 0, 0, 0.2);
     
     /* Border radius */
     --radius-sm: 6px;
@@ -208,13 +208,13 @@ button, .btn {
 .btn-primary, button {
     background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-hover) 100%);
     color: white;
-    box-shadow: 0 4px 15px rgba(255, 60, 56, 0.3);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
 }
 
 .btn-primary:hover, button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(255, 60, 56, 0.4);
-    background: linear-gradient(135deg, var(--accent-hover) 0%, #d32f2a 100%);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+    background: linear-gradient(135deg, var(--accent-hover) 0%, #1e40af 100%);
 }
 
 .btn-outline {
@@ -265,7 +265,7 @@ select:focus,
 textarea:focus {
     outline: none;
     border-color: var(--accent-color);
-    box-shadow: 0 0 20px rgba(255, 60, 56, 0.2);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
     background: var(--secondary-bg);
 }
 
@@ -336,7 +336,7 @@ input::placeholder {
 }
 
 .weight-input-card {
-    background: linear-gradient(135deg, rgba(255, 60, 56, 0.1) 0%, rgba(255, 60, 56, 0.05) 100%);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
     border: 2px solid var(--accent-color);
     border-radius: var(--radius-lg);
     padding: var(--space-xl);
@@ -368,7 +368,7 @@ input::placeholder {
 
 .progress-circle svg {
     transform: rotate(-90deg);
-    filter: drop-shadow(0 0 10px var(--shadow-light));
+    filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.2));
 }
 
 .progress-text {
@@ -412,7 +412,7 @@ input::placeholder {
     font-size: 1.1rem;
     padding: var(--space-xl);
     border-radius: var(--radius-lg);
-    box-shadow: 0 8px 30px rgba(255, 60, 56, 0.3);
+    box-shadow: 0 8px 30px rgba(59, 130, 246, 0.3);
     margin-bottom: var(--space-xl);
 }
 
