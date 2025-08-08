@@ -1,172 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Workouts - CedHealth</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Workouts - KronosIQ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #000;
-            color: #ffffff;
-            min-height: 100vh;
-            position: relative;
-            overflow-x: hidden;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 20% 30%, rgba(220, 38, 38, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(127, 29, 29, 0.1) 0%, transparent 50%),
-                url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><text y="50" font-size="40" fill="rgba(127,29,29,0.05)">💪</text><text x="100" y="150" font-size="30" fill="rgba(127,29,29,0.05)">🏋️</text></svg>');
-            background-size: 100% 100%, 100% 100%, 200px 200px;
-            z-index: -1;
-            animation: float 20s infinite linear;
-        }
-
-        @keyframes float {
-            0% { background-position: 0% 0%, 0% 0%, 0px 0px; }
-            100% { background-position: 0% 0%, 0% 0%, 200px 200px; }
-        }
-
-        /* Navigation Bar */
-        .navbar {
-            background: rgba(20, 20, 20, 0.95);
-            border-bottom: 2px solid rgba(220, 38, 38, 0.3);
-            box-shadow: 0 0 30px rgba(220, 38, 38, 0.2);
-            backdrop-filter: blur(10px);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .nav-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 30px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            height: 80px;
-        }
-
-        .nav-left {
-            display: flex;
-            align-items: center;
-            gap: 40px;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            color: #dc2626;
-            font-size: 2rem;
-        }
-
-        .logo-text {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: #ffffff;
-            text-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
-        }
-
-        .nav-right {
-            display: flex;
-            align-items: center;
-        }
-
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 30px;
-        }
-
-        .nav-link {
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-            font-weight: 500;
-            padding: 10px 20px;
-            border-radius: 12px;
-            transition: all 0.3s ease;
-            border: 1px solid transparent;
-        }
-
-        .nav-link:hover {
-            color: #dc2626;
-            background: rgba(220, 38, 38, 0.1);
-            border-color: rgba(220, 38, 38, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .btn-outline {
-            background: transparent;
-            color: #dc2626;
-            border: 2px solid #dc2626;
-            padding: 12px 24px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            text-decoration: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .btn-outline:hover {
-            background: #dc2626;
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(220, 38, 38, 0.3);
-        }
-
-        /* Main Container */
-        .main-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 30px;
-        }
-
-        .page-header {
-            text-align: center;
-            margin-bottom: 50px;
-        }
-
-        .page-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #ffffff;
-            margin-bottom: 15px;
-            text-shadow: 0 0 20px rgba(220, 38, 38, 0.5);
-        }
-
-        .page-subtitle {
-            font-size: 1.1rem;
-            color: rgba(220, 38, 38, 0.8);
-            font-weight: 500;
-        }
-
-        /* Workout Tabs */
+        /* Workout-specific styles */
         .workout-tabs {
             display: flex;
             justify-content: center;
@@ -176,10 +17,10 @@
 
         .workout-tab {
             padding: 15px 30px;
-            background: rgba(20, 20, 20, 0.95);
-            border: 2px solid rgba(220, 38, 38, 0.3);
-            border-radius: 12px;
-            color: rgba(255, 255, 255, 0.8);
+            background: var(--secondary-bg);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
             font-weight: 500;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -187,16 +28,16 @@
         }
 
         .workout-tab.active {
-            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            background: var(--accent-gradient);
             color: white;
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(220, 38, 38, 0.3);
+            box-shadow: 0 10px 25px rgba(95, 48, 255, 0.3);
         }
 
         .workout-tab:hover:not(.active) {
-            color: #dc2626;
-            background: rgba(220, 38, 38, 0.1);
-            border-color: rgba(220, 38, 38, 0.5);
+            color: var(--accent-color);
+            background: rgba(95, 48, 255, 0.1);
+            border-color: var(--accent-color);
         }
 
         .tab-content {
@@ -207,7 +48,6 @@
             display: block;
         }
 
-        /* Category Filter */
         .category-filter {
             text-align: center;
             margin-bottom: 40px;
@@ -215,14 +55,13 @@
 
         .category-select {
             padding: 12px 20px;
-            border-radius: 12px;
-            border: 2px solid rgba(220, 38, 38, 0.4);
-            background: rgba(31, 31, 31, 0.9);
-            color: #ffffff;
+            border-radius: var(--radius-md);
+            border: 2px solid var(--border-color);
+            background: var(--tertiary-bg);
+            color: var(--text-primary);
             font-size: 1rem;
         }
 
-        /* Exercise Grids */
         .exercises-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -230,36 +69,36 @@
         }
 
         .exercise-card {
-            background: rgba(20, 20, 20, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 0 30px rgba(220, 38, 38, 0.2);
-            border: 2px solid rgba(220, 38, 38, 0.3);
+            background: var(--card-bg);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 0 30px var(--shadow-medium);
+            border: 2px solid var(--border-color);
             overflow: hidden;
-            backdrop-filter: blur(10px);
             transition: all 0.3s ease;
         }
 
         .exercise-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(220, 38, 38, 0.3);
+            box-shadow: 0 15px 40px var(--shadow-heavy);
+            border-color: var(--accent-color);
         }
 
         .exercise-gif {
             width: 100%;
             height: 200px;
             object-fit: cover;
-            background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(127, 29, 29, 0.1) 100%);
+            background: linear-gradient(135deg, rgba(95, 48, 255, 0.1) 0%, rgba(150, 100, 255, 0.1) 100%);
         }
 
         .exercise-placeholder {
             width: 100%;
             height: 200px;
-            background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(127, 29, 29, 0.1) 100%);
+            background: linear-gradient(135deg, rgba(95, 48, 255, 0.1) 0%, rgba(150, 100, 255, 0.1) 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 3rem;
-            color: rgba(220, 38, 38, 0.5);
+            color: rgba(95, 48, 255, 0.5);
         }
 
         .exercise-content {
@@ -269,9 +108,8 @@
         .exercise-name {
             font-size: 1.3rem;
             font-weight: 600;
-            color: #ffffff;
+            color: var(--text-primary);
             margin-bottom: 15px;
-            text-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
             text-transform: capitalize;
         }
 
@@ -289,7 +127,7 @@
 
         .detail-label {
             font-size: 0.8rem;
-            color: #dc2626;
+            color: var(--accent-color);
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -298,77 +136,46 @@
 
         .detail-value {
             font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.8);
+            color: var(--text-secondary);
             text-transform: capitalize;
         }
 
         .exercise-description {
-            color: rgba(255, 255, 255, 0.8);
+            color: var(--text-secondary);
             line-height: 1.6;
             font-size: 0.95rem;
             margin-top: 10px;
         }
 
         .error-message {
-            background: rgba(220, 38, 38, 0.1);
-            border: 2px solid rgba(220, 38, 38, 0.3);
-            border-radius: 12px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid rgba(239, 68, 68, 0.3);
+            border-radius: var(--radius-md);
             padding: 20px;
             margin-bottom: 30px;
             text-align: center;
-            color: #dc2626;
+            color: #ef4444;
             font-weight: 500;
         }
 
         .no-exercises {
             text-align: center;
-            color: rgba(255, 255, 255, 0.6);
+            color: var(--text-muted);
             font-size: 1.1rem;
             margin-top: 50px;
         }
 
-        /* Responsive Design */
         @media (max-width: 768px) {
-            .nav-container {
-                padding: 0 20px;
-                height: auto;
-                min-height: 80px;
-                flex-direction: column;
-                gap: 20px;
-                padding-top: 20px;
-                padding-bottom: 20px;
-            }
-            
-            .nav-left {
-                flex-direction: column;
-                gap: 20px;
-                text-align: center;
-            }
-            
-            .nav-links {
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 15px;
-            }
-            
-            .main-container {
-                padding: 30px 20px;
-            }
-            
             .workout-tabs {
                 flex-direction: column;
                 align-items: center;
             }
-            
+
             .exercises-grid {
                 grid-template-columns: 1fr;
                 gap: 20px;
             }
-            
-            .page-title {
-                font-size: 2rem;
-            }
-            
+
             .exercise-content {
                 padding: 20px;
             }
@@ -382,7 +189,9 @@
             <div class="nav-left">
                 <div class="logo">
                     <div class="logo-icon">🏥</div>
-                    <span class="logo-text">CedHealth</span>
+                    <span class="logo-text">
+                        <span class="brand-kronos">Kronos</span><span class="brand-iq">IQ</span>
+                    </span>
                 </div>
             </div>
             <div class="nav-right">
@@ -391,7 +200,7 @@
                     <a href="/meals" class="nav-link">Meals</a>
                     <a href="/explore_foods" class="nav-link">Explore Foods</a>
                     <a href="/goals" class="nav-link">Goals</a>
-                    <a href="/logout" class="btn-outline">Logout</a>
+                    <a href="/logout" class="btn btn-outline">Logout</a>
                 </div>
             </div>
         </div>
@@ -437,7 +246,7 @@
                 {% for exercise in exercises %}
                 <div class="exercise-card">
                     <div class="exercise-placeholder">🏋️</div>
-                    
+
                     <div class="exercise-content">
                         <h3 class="exercise-name">{{ exercise.name }}</h3>
                         <div class="exercise-details">
@@ -472,10 +281,10 @@
                     {% else %}
                         <div class="exercise-placeholder">🏋️</div>
                     {% endif %}
-                    
+
                     <div class="exercise-content">
                         <h3 class="exercise-name">{{ exercise.name }}</h3>
-                        
+
                         <div class="exercise-details">
                             <div class="exercise-detail">
                                 <span class="detail-label">Body Part</span>
@@ -486,7 +295,7 @@
                                 <span class="detail-value">{{ exercise.equipment }}</span>
                             </div>
                         </div>
-                        
+
                         <div class="exercise-detail" style="margin-top: 15px;">
                             <span class="detail-label">Target Muscle</span>
                             <span class="detail-value">{{ exercise.target }}</span>
@@ -509,15 +318,15 @@
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.remove('active');
             });
-            
+
             // Remove active class from all tabs
             document.querySelectorAll('.workout-tab').forEach(tab => {
                 tab.classList.remove('active');
             });
-            
+
             // Show selected tab content
             document.getElementById(tabName).classList.add('active');
-            
+
             // Add active class to clicked tab
             event.target.classList.add('active');
         }
