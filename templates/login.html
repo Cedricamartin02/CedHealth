@@ -57,12 +57,13 @@
             width: 100%;
             max-width: 460px;
             backdrop-filter: blur(15px); /* Stronger blur effect */
+            margin: 10px;
         }
 
         .auth-header {
             background: linear-gradient(135deg, rgba(95, 48, 255, 0.9) 0%, rgba(150, 100, 255, 0.9) 100%); /* Gradient for header */
             color: #ffffff;
-            padding: 50px 40px;
+            padding: 35px 30px;
             text-align: center;
             position: relative;
             border-bottom: 2px solid rgba(100, 100, 255, 0.2);
@@ -98,7 +99,7 @@
         }
 
         .auth-body {
-            padding: 40px 40px;
+            padding: 30px 30px;
         }
 
         .form-group {
@@ -201,47 +202,92 @@
         }
 
         @media (max-width: 480px) {
+            body {
+                padding: 10px;
+                min-height: 100vh;
+            }
+
             .auth-container {
-                margin: 10px;
+                margin: 5px;
                 border-radius: 18px;
+                max-width: 100%;
             }
 
             .auth-header {
-                padding: 40px 30px;
+                padding: 25px 20px;
             }
 
             .brand-text {
-                font-size: 2rem;
-            }
-
-            .auth-header h2 {
                 font-size: 1.8rem;
             }
 
+            .auth-header h2 {
+                font-size: 1.5rem;
+                margin-bottom: 8px;
+            }
+
             .auth-header p {
-                font-size: 1rem;
+                font-size: 0.9rem;
             }
 
             .auth-body {
-                padding: 30px 30px;
+                padding: 25px 20px;
+            }
+
+            .form-group {
+                margin-bottom: 20px;
             }
 
             input[type="text"], input[type="password"] {
-                padding: 15px 18px;
-                font-size: 0.95rem;
+                padding: 14px 16px;
+                font-size: 16px; /* Prevents zoom on iOS */
             }
 
             .btn-primary {
-                padding: 15px;
-                font-size: 1rem;
+                padding: 14px;
+                font-size: 0.95rem;
+                margin-bottom: 15px;
             }
 
             .auth-footer {
-                padding: 25px 30px;
+                padding: 20px 20px;
             }
 
             .auth-footer a {
-                font-size: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .alert-error {
+                padding: 15px 18px;
+                margin-bottom: 20px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 375px) {
+            .auth-container {
+                margin: 0;
+                border-radius: 0;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            .brand-text {
+                font-size: 1.6rem;
+            }
+
+            .auth-header h2 {
+                font-size: 1.3rem;
+            }
+
+            .auth-body {
+                padding: 20px 18px;
+            }
+
+            .auth-footer {
+                padding: 18px;
             }
         }
     </style>
