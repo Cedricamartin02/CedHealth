@@ -40,12 +40,22 @@
         }
 
         .chart-card .card-body {
-            height: 350px;
+            height: auto;
             position: relative;
+            padding: 20px;
         }
 
         .chart-card canvas {
             max-height: 280px !important;
+        }
+
+        .chart-container {
+            position: relative;
+        }
+
+        .nutrition-progress-section {
+            border-top: 1px solid rgba(95, 48, 255, 0.2);
+            padding-top: 20px;
         }
 
         .weight-input-card {
@@ -391,77 +401,72 @@
                     </div>
                 </div>
 
-                <div class="calories-nutrition-section">
-                    <div class="card chart-card">
-                        <div class="card-header">
-                            <h3>Daily Calories</h3>
-                            <p class="card-subtitle">Your daily intake vs goal</p>
-                        </div>
-                        <div class="card-body">
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <h3>Daily Calories & Nutrition Progress</h3>
+                        <p class="card-subtitle">Your daily intake vs goal</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="height: 280px; margin-bottom: 30px;">
                             <canvas id="caloriesChart"></canvas>
                         </div>
-                    </div>
-
-                    <!-- Macros Progress -->
-                    <div class="card macros-card">
-                        <div class="card-header">
-                            <h3>Today's Nutrition Progress</h3>
-                            <p class="card-subtitle">Track your macro nutrients</p>
-                        </div>
-                        <div class="card-body">
+                        
+                        <!-- Nutrition Progress Circles -->
+                        <div class="nutrition-progress-section">
+                            <h4 style="color: #e0e0e0; text-align: center; margin-bottom: 20px; font-size: 1.1rem; font-weight: 600;">Today's Nutrition Progress</h4>
                             <div class="macros-grid">
                                 <div class="macro-item">
                                     <div class="progress-circle" data-progress="{{ protein_progress }}">
-                                        <svg width="120" height="120">
-                                            <circle cx="60" cy="60" r="45" stroke="rgba(95, 48, 255, 0.2)" stroke-width="6" fill="none"/>
-                                            <circle cx="60" cy="60" r="45" stroke="#5f30ff" stroke-width="6" fill="none" 
-                                                    stroke-dasharray="283" stroke-dashoffset="283" class="progress-bar" id="protein-progress"/>
+                                        <svg width="100" height="100">
+                                            <circle cx="50" cy="50" r="35" stroke="rgba(95, 48, 255, 0.2)" stroke-width="5" fill="none"/>
+                                            <circle cx="50" cy="50" r="35" stroke="#5f30ff" stroke-width="5" fill="none" 
+                                                    stroke-dasharray="220" stroke-dashoffset="220" class="progress-bar" id="protein-progress"/>
                                         </svg>
                                         <div class="progress-text">
-                                            <span class="progress-value">{{ current_protein }}g</span>
-                                            <span class="progress-label">Protein</span>
+                                            <span class="progress-value" style="font-size: 1.1rem;">{{ current_protein }}g</span>
+                                            <span class="progress-label" style="font-size: 0.8rem;">Protein</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="macro-item">
                                     <div class="progress-circle" data-progress="{{ carbs_progress }}">
-                                        <svg width="120" height="120">
-                                            <circle cx="60" cy="60" r="45" stroke="rgba(95, 48, 255, 0.2)" stroke-width="6" fill="none"/>
-                                            <circle cx="60" cy="60" r="45" stroke="#f59e0b" stroke-width="6" fill="none" 
-                                                    stroke-dasharray="283" stroke-dashoffset="283" class="progress-bar" id="carbs-progress"/>
+                                        <svg width="100" height="100">
+                                            <circle cx="50" cy="50" r="35" stroke="rgba(95, 48, 255, 0.2)" stroke-width="5" fill="none"/>
+                                            <circle cx="50" cy="50" r="35" stroke="#f59e0b" stroke-width="5" fill="none" 
+                                                    stroke-dasharray="220" stroke-dashoffset="220" class="progress-bar" id="carbs-progress"/>
                                         </svg>
                                         <div class="progress-text">
-                                            <span class="progress-value">{{ current_carbs }}g</span>
-                                            <span class="progress-label">Carbs</span>
+                                            <span class="progress-value" style="font-size: 1.1rem;">{{ current_carbs }}g</span>
+                                            <span class="progress-label" style="font-size: 0.8rem;">Carbs</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="macro-item">
                                     <div class="progress-circle" data-progress="{{ fat_progress }}">
-                                        <svg width="120" height="120">
-                                            <circle cx="60" cy="60" r="45" stroke="rgba(95, 48, 255, 0.2)" stroke-width="6" fill="none"/>
-                                            <circle cx="60" cy="60" r="45" stroke="#10b981" stroke-width="6" fill="none" 
-                                                    stroke-dasharray="283" stroke-dashoffset="283" class="progress-bar" id="fat-progress"/>
+                                        <svg width="100" height="100">
+                                            <circle cx="50" cy="50" r="35" stroke="rgba(95, 48, 255, 0.2)" stroke-width="5" fill="none"/>
+                                            <circle cx="50" cy="50" r="35" stroke="#10b981" stroke-width="5" fill="none" 
+                                                    stroke-dasharray="220" stroke-dashoffset="220" class="progress-bar" id="fat-progress"/>
                                         </svg>
                                         <div class="progress-text">
-                                            <span class="progress-value">{{ current_fat }}g</span>
-                                            <span class="progress-label">Fat</span>
+                                            <span class="progress-value" style="font-size: 1.1rem;">{{ current_fat }}g</span>
+                                            <span class="progress-label" style="font-size: 0.8rem;">Fat</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="macro-item">
                                     <div class="progress-circle" data-progress="{{ fiber_progress }}">
-                                        <svg width="120" height="120">
-                                            <circle cx="60" cy="60" r="45" stroke="rgba(95, 48, 255, 0.2)" stroke-width="6" fill="none"/>
-                                            <circle cx="60" cy="60" r="45" stroke="#8b5cf6" stroke-width="6" fill="none" 
-                                                    stroke-dasharray="283" stroke-dashoffset="283" class="progress-bar" id="fiber-progress"/>
+                                        <svg width="100" height="100">
+                                            <circle cx="50" cy="50" r="35" stroke="rgba(95, 48, 255, 0.2)" stroke-width="5" fill="none"/>
+                                            <circle cx="50" cy="50" r="35" stroke="#8b5cf6" stroke-width="5" fill="none" 
+                                                    stroke-dasharray="220" stroke-dashoffset="220" class="progress-bar" id="fiber-progress"/>
                                         </svg>
                                         <div class="progress-text">
-                                            <span class="progress-value">{{ current_fiber }}g</span>
-                                            <span class="progress-label">Fiber</span>
+                                            <span class="progress-value" style="font-size: 1.1rem;">{{ current_fiber }}g</span>
+                                            <span class="progress-label" style="font-size: 0.8rem;">Fiber</span>
                                         </div>
                                     </div>
                                 </div>
@@ -719,7 +724,7 @@
             // Animate progress circles
             function animateProgressCircle(id, progress) {
                 const circle = document.getElementById(id);
-                const circumference = 2 * Math.PI * 45;
+                const circumference = 2 * Math.PI * 35; // Updated for smaller radius
                 const offset = circumference - (progress / 100) * circumference;
                 circle.style.strokeDashoffset = offset;
             }
