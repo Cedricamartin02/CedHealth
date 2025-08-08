@@ -42,26 +42,20 @@
             max-height: 280px !important;
         }
 
-        .weight-input-section {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #333;
-        }
-
         .weight-input-card {
             background: linear-gradient(135deg, rgba(95, 48, 255, 0.1) 0%, rgba(150, 100, 255, 0.1) 100%);
             border: 2px solid rgba(95, 48, 255, 0.3);
-            border-radius: 16px;
-            padding: 25px;
+            border-radius: 12px;
+            padding: 20px;
             text-align: center;
-            box-shadow: 0 0 20px rgba(95, 48, 255, 0.15);
+            box-shadow: 0 0 15px rgba(95, 48, 255, 0.15);
         }
 
         .weight-input-card h4 {
             color: #e0e0e0;
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 600;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .weight-form .input-group {
@@ -289,20 +283,30 @@
             }
 
             .weight-input-card {
-                padding: 20px;
+                padding: 15px;
+                margin-top: 10px !important;
+            }
+
+            .weight-input-card h4 {
+                font-size: 0.9rem;
+                margin-bottom: 10px;
             }
 
             .weight-form .input-group {
                 flex-direction: column;
-                gap: 15px;
+                gap: 12px;
             }
 
             .weight-input {
                 max-width: 100%;
+                padding: 12px 16px;
+                font-size: 0.95rem;
             }
 
             .weight-save-btn {
                 width: 100%;
+                padding: 12px;
+                font-size: 0.9rem;
             }
         }
     </style>
@@ -347,34 +351,33 @@
                     <div class="card-header">
                         <h3>Weight Progress (Past 7 Days)</h3>
                         <p class="card-subtitle">Track your daily weight changes in pounds</p>
+                        <!-- Weight Input Section in Header -->
+                        <div class="weight-input-card" style="margin-top: 15px;">
+                            {% if today_weight %}
+                                <h4 style="margin-bottom: 10px; font-size: 1rem;">📊 Today's Weight: {{ today_weight }} lbs</h4>
+                                <p style="color: #B8B8B8; margin-bottom: 15px; font-size: 0.85rem;">{{ today_date }}</p>
+                                <form method="POST" action="/log_weight" class="weight-form">
+                                    <div class="input-group">
+                                        <input type="number" name="weight" placeholder="Enter Today's Weight (lbs)" value="{{ today_weight }}" step="0.1" min="50" max="999" required 
+                                               class="weight-input">
+                                        <button type="submit" class="btn btn-primary weight-save-btn">Update Weight</button>
+                                    </div>
+                                </form>
+                            {% else %}
+                                <h4 style="margin-bottom: 10px; font-size: 1rem;">📊 Enter Today's Weight (lbs)</h4>
+                                <p style="color: #B8B8B8; margin-bottom: 15px; font-size: 0.85rem;">{{ today_date }}</p>
+                                <form method="POST" action="/log_weight" class="weight-form">
+                                    <div class="input-group">
+                                        <input type="number" name="weight" placeholder="Enter Today's Weight (lbs)" step="0.1" min="50" max="999" required 
+                                               class="weight-input">
+                                        <button type="submit" class="btn btn-primary weight-save-btn">Submit</button>
+                                    </div>
+                                </form>
+                            {% endif %}
+                        </div>
                     </div>
                     <div class="card-body">
                         <canvas id="weightChart"></canvas>
-                        <div class="weight-input-section">
-                            <div class="weight-input-card">
-                                {% if today_weight %}
-                                    <h4>📊 Today's Weight: {{ today_weight }} lbs</h4>
-                                    <p style="color: #B8B8B8; margin-bottom: 15px; font-size: 0.9rem;">{{ today_date }}</p>
-                                    <form method="POST" action="/log_weight" class="weight-form">
-                                        <div class="input-group">
-                                            <input type="number" name="weight" placeholder="Enter Today's Weight (lbs)" value="{{ today_weight }}" step="0.1" min="50" max="999" required 
-                                                   class="weight-input">
-                                            <button type="submit" class="btn btn-primary weight-save-btn">Update Weight</button>
-                                        </div>
-                                    </form>
-                                {% else %}
-                                    <h4>📊 Enter Today's Weight (lbs)</h4>
-                                    <p style="color: #B8B8B8; margin-bottom: 15px; font-size: 0.9rem;">{{ today_date }}</p>
-                                    <form method="POST" action="/log_weight" class="weight-form">
-                                        <div class="input-group">
-                                            <input type="number" name="weight" placeholder="Enter Today's Weight (lbs)" step="0.1" min="50" max="999" required 
-                                                   class="weight-input">
-                                            <button type="submit" class="btn btn-primary weight-save-btn">Submit</button>
-                                        </div>
-                                    </form>
-                                {% endif %}
-                            </div>
-                        </div>
                     </div>
                 </div>
 
