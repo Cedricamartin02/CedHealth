@@ -12,25 +12,26 @@
         .motivational-quote {
             background: linear-gradient(135deg, #5f30ff 0%, #9664ff 100%);
             color: white;
-            padding: 20px;
+            padding: 25px 30px;
             border-radius: 16px;
             text-align: center;
-            margin-bottom: 30px;
-            font-size: 1.1rem;
+            margin-bottom: 40px;
+            font-size: 1rem;
             font-weight: 500;
             box-shadow: 0 4px 20px rgba(95, 48, 255, 0.3);
+            line-height: 1.5;
         }
 
         .dashboard-container {
             display: flex;
             flex-direction: column;
-            gap: 30px;
+            gap: 40px;
         }
 
         .charts-section {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
+            grid-template-columns: 1fr;
+            gap: 40px;
         }
 
         .calories-nutrition-section {
@@ -59,12 +60,12 @@
         }
 
         .weight-input-card {
-            background: linear-gradient(135deg, rgba(95, 48, 255, 0.1) 0%, rgba(150, 100, 255, 0.1) 100%);
-            border: 2px solid rgba(95, 48, 255, 0.3);
+            background: rgba(42, 42, 42, 0.8);
+            border: 1px solid rgba(95, 48, 255, 0.3);
             border-radius: 12px;
-            padding: 20px;
+            padding: 15px;
             text-align: center;
-            box-shadow: 0 0 15px rgba(95, 48, 255, 0.15);
+            box-shadow: none;
         }
 
         .weight-input-card h4 {
@@ -177,7 +178,7 @@
 
         .dashboard-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 30px;
             margin-bottom: 30px;
         }
@@ -372,25 +373,23 @@
                         <h3>Weight Progress (Past 7 Days)</h3>
                         <p class="card-subtitle">Track your daily weight changes in pounds</p>
                         <!-- Weight Input Section in Header -->
-                        <div class="weight-input-card" style="margin-top: 15px;">
+                        <div class="weight-input-card" style="margin-top: 20px;">
                             {% if today_weight %}
-                                <h4 style="margin-bottom: 10px; font-size: 1rem;">📊 Today's Weight: {{ today_weight }} lbs</h4>
-                                <p style="color: #B8B8B8; margin-bottom: 15px; font-size: 0.85rem;">{{ today_date }}</p>
+                                <h4 style="margin-bottom: 15px; font-size: 0.95rem; color: #B8B8B8;">Current: {{ today_weight }} lbs</h4>
                                 <form method="POST" action="/log_weight" class="weight-form">
                                     <div class="input-group">
-                                        <input type="number" name="weight" placeholder="Enter Today's Weight (lbs)" value="{{ today_weight }}" step="0.1" min="50" max="999" required 
+                                        <input type="number" name="weight" placeholder="Update weight" value="{{ today_weight }}" step="0.1" min="50" max="999" required 
                                                class="weight-input">
-                                        <button type="submit" class="btn btn-primary weight-save-btn">Update Weight</button>
+                                        <button type="submit" class="btn btn-primary weight-save-btn">Update</button>
                                     </div>
                                 </form>
                             {% else %}
-                                <h4 style="margin-bottom: 10px; font-size: 1rem;">📊 Enter Today's Weight (lbs)</h4>
-                                <p style="color: #B8B8B8; margin-bottom: 15px; font-size: 0.85rem;">{{ today_date }}</p>
+                                <h4 style="margin-bottom: 15px; font-size: 0.95rem; color: #B8B8B8;">Enter Today's Weight</h4>
                                 <form method="POST" action="/log_weight" class="weight-form">
                                     <div class="input-group">
-                                        <input type="number" name="weight" placeholder="Enter Today's Weight (lbs)" step="0.1" min="50" max="999" required 
+                                        <input type="number" name="weight" placeholder="Weight (lbs)" step="0.1" min="50" max="999" required 
                                                class="weight-input">
-                                        <button type="submit" class="btn btn-primary weight-save-btn">Submit</button>
+                                        <button type="submit" class="btn btn-primary weight-save-btn">Save</button>
                                     </div>
                                 </form>
                             {% endif %}
@@ -413,46 +412,45 @@
                         
                         <!-- Nutrition Progress Circles -->
                         <div class="nutrition-progress-section">
-                            <h4 style="color: #e0e0e0; text-align: center; margin-bottom: 20px; font-size: 1.1rem; font-weight: 600;">Today's Nutrition Progress</h4>
-                            <div class="macros-grid" style="grid-template-columns: repeat(3, 1fr); justify-items: center;">
+                            <div class="macros-grid" style="grid-template-columns: repeat(3, 1fr); justify-items: center; gap: 30px;">
                                 <div class="macro-item">
                                     <div class="progress-circle" data-progress="{{ protein_progress }}">
-                                        <svg width="100" height="100">
-                                            <circle cx="50" cy="50" r="35" stroke="rgba(95, 48, 255, 0.2)" stroke-width="5" fill="none"/>
-                                            <circle cx="50" cy="50" r="35" stroke="#5f30ff" stroke-width="5" fill="none" 
-                                                    stroke-dasharray="220" stroke-dashoffset="220" class="progress-bar" id="protein-progress"/>
+                                        <svg width="90" height="90">
+                                            <circle cx="45" cy="45" r="32" stroke="rgba(95, 48, 255, 0.2)" stroke-width="4" fill="none"/>
+                                            <circle cx="45" cy="45" r="32" stroke="#5f30ff" stroke-width="4" fill="none" 
+                                                    stroke-dasharray="201" stroke-dashoffset="201" class="progress-bar" id="protein-progress"/>
                                         </svg>
                                         <div class="progress-text">
-                                            <span class="progress-value" style="font-size: 1.1rem;">{{ current_protein }}g</span>
-                                            <span class="progress-label" style="font-size: 0.8rem;">Protein</span>
+                                            <span class="progress-value" style="font-size: 1rem;">{{ current_protein }}g</span>
+                                            <span class="progress-label" style="font-size: 0.75rem;">Protein</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="macro-item">
                                     <div class="progress-circle" data-progress="{{ carbs_progress }}">
-                                        <svg width="100" height="100">
-                                            <circle cx="50" cy="50" r="35" stroke="rgba(95, 48, 255, 0.2)" stroke-width="5" fill="none"/>
-                                            <circle cx="50" cy="50" r="35" stroke="#f59e0b" stroke-width="5" fill="none" 
-                                                    stroke-dasharray="220" stroke-dashoffset="220" class="progress-bar" id="carbs-progress"/>
+                                        <svg width="90" height="90">
+                                            <circle cx="45" cy="45" r="32" stroke="rgba(245, 158, 11, 0.2)" stroke-width="4" fill="none"/>
+                                            <circle cx="45" cy="45" r="32" stroke="#f59e0b" stroke-width="4" fill="none" 
+                                                    stroke-dasharray="201" stroke-dashoffset="201" class="progress-bar" id="carbs-progress"/>
                                         </svg>
                                         <div class="progress-text">
-                                            <span class="progress-value" style="font-size: 1.1rem;">{{ current_carbs }}g</span>
-                                            <span class="progress-label" style="font-size: 0.8rem;">Carbs</span>
+                                            <span class="progress-value" style="font-size: 1rem;">{{ current_carbs }}g</span>
+                                            <span class="progress-label" style="font-size: 0.75rem;">Carbs</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="macro-item">
                                     <div class="progress-circle" data-progress="{{ fat_progress }}">
-                                        <svg width="100" height="100">
-                                            <circle cx="50" cy="50" r="35" stroke="rgba(95, 48, 255, 0.2)" stroke-width="5" fill="none"/>
-                                            <circle cx="50" cy="50" r="35" stroke="#10b981" stroke-width="5" fill="none" 
-                                                    stroke-dasharray="220" stroke-dashoffset="220" class="progress-bar" id="fat-progress"/>
+                                        <svg width="90" height="90">
+                                            <circle cx="45" cy="45" r="32" stroke="rgba(16, 185, 129, 0.2)" stroke-width="4" fill="none"/>
+                                            <circle cx="45" cy="45" r="32" stroke="#10b981" stroke-width="4" fill="none" 
+                                                    stroke-dasharray="201" stroke-dashoffset="201" class="progress-bar" id="fat-progress"/>
                                         </svg>
                                         <div class="progress-text">
-                                            <span class="progress-value" style="font-size: 1.1rem;">{{ current_fat }}g</span>
-                                            <span class="progress-label" style="font-size: 0.8rem;">Fat</span>
+                                            <span class="progress-value" style="font-size: 1rem;">{{ current_fat }}g</span>
+                                            <span class="progress-label" style="font-size: 0.75rem;">Fat</span>
                                         </div>
                                     </div>
                                 </div>
@@ -462,105 +460,14 @@
                 </div>
             </div>
 
-            <!-- Goals Summary Section -->
-            <div class="dashboard-grid">
-                <!-- Goals Summary -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2>Goals Summary</h2>
-                        <p class="card-subtitle">Your health and fitness targets</p>
-                    </div>
-                    <div class="card-body">
-                        <div class="goals-summary">
-                            {% if weight_goal %}
-                                <div class="goal-item">
-                                    <span class="goal-label">Target Weight</span>
-                                    <span class="goal-value">{{ weight_goal }} kg</span>
-                                </div>
-                            {% endif %}
-                            <div class="goal-item">
-                                <span class="goal-label">Daily Calories</span>
-                                <span class="goal-value">{{ calorie_goal }} kcal</span>
-                            </div>
-                            <div class="goal-item">
-                                <span class="goal-label">Protein Goal</span>
-                                <span class="goal-value">{{ protein_goal }}g</span>
-                            </div>
-                            <div class="goal-item">
-                                <span class="goal-label">Carbs Goal</span>
-                                <span class="goal-value">{{ carbs_goal }}g</span>
-                            </div>
-                            <div class="goal-item">
-                                <span class="goal-label">Fat Goal</span>
-                                <span class="goal-value">{{ fat_goal }}g</span>
-                            </div>
-                        </div>
-                        <div style="text-align: center; margin-top: 20px;">
-                            <a href="/goals" class="btn btn-primary">Update Goals</a>
-                        </div>
-                    </div>
+            <!-- Quick Actions -->
+            <div class="card" style="text-align: center; padding: 30px;">
+                <h2 style="margin-bottom: 20px; color: #e0e0e0;">Quick Actions</h2>
+                <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+                    <a href="/meals" class="btn btn-primary">Log Meal</a>
+                    <a href="/goals" class="btn btn-secondary">Update Goals</a>
+                    <a href="/workouts" class="btn btn-secondary">Start Workout</a>
                 </div>
-            </div>
-
-            <!-- Meal of the Day and Diet Summary Section -->
-            <div class="dashboard-grid">
-                {% if recipe_data %}
-                <div class="card">
-                    <div class="card-header">
-                        <h2>🍽️ Meal of the Day</h2>
-                        <p class="card-subtitle">Today's featured recipe</p>
-                    </div>
-                    <div class="card-body">
-                        <div class="meal-of-day">
-                            {% if recipe_data.image %}
-                                <img src="{{ recipe_data.image }}" alt="{{ recipe_data.title }}" class="recipe-image">
-                            {% endif %}
-                            <h3 class="recipe-title">{{ recipe_data.title }}</h3>
-                            <p class="recipe-summary">{{ recipe_data.summary }}</p>
-                            <div class="recipe-details">
-                                <span class="recipe-time">⏱️ {{ recipe_data.readyInMinutes }} min</span>
-                            </div>
-                            {% if recipe_data.sourceUrl %}
-                                <a href="{{ recipe_data.sourceUrl }}" target="_blank" class="btn btn-primary">View Recipe</a>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-
-                {% if diet_summary %}
-                <div class="card">
-                    <div class="card-header">
-                        <h2>📊 Recommended Diet</h2>
-                        <p class="card-subtitle">Your personalized nutrition plan</p>
-                    </div>
-                    <div class="card-body">
-                        <div class="diet-summary">
-                            <div class="diet-goal">
-                                <span class="diet-label">Goal Type</span>
-                                <span class="diet-value">
-                                    {% if diet_summary.goal_type == 'gain_weight' %}
-                                        💪 Build Muscle
-                                    {% elif diet_summary.goal_type == 'lose_weight' %}
-                                        🔥 Lose Weight
-                                    {% else %}
-                                        ⚖️ Maintain Weight
-                                    {% endif %}
-                                </span>
-                            </div>
-                            <div class="diet-goal">
-                                <span class="diet-label">Target Calories</span>
-                                <span class="diet-value">{{ diet_summary.target_calories }} kcal/day</span>
-                            </div>
-                            <div class="diet-goal">
-                                <span class="diet-label">Target Protein</span>
-                                <span class="diet-value">{{ diet_summary.target_protein }}g/day</span>
-                            </div>
-                            <a href="/recommended_diet" class="btn btn-primary">View Full Plan</a>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
             </div>
         </div>
     </div>
@@ -710,7 +617,7 @@
             // Animate progress circles
             function animateProgressCircle(id, progress) {
                 const circle = document.getElementById(id);
-                const circumference = 2 * Math.PI * 35; // Updated for smaller radius
+                const circumference = 2 * Math.PI * 32; // Updated for smaller radius
                 const offset = circumference - (progress / 100) * circumference;
                 circle.style.strokeDashoffset = offset;
             }
