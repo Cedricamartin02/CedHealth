@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - CedHealth</title>
-    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <title>Login - KronosIQ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
         * {
             margin: 0;
@@ -13,9 +14,9 @@
         }
 
         body {
-            font-family: 'Source Sans Pro', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-            background: #000;
-            color: #ffffff;
+            font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #121212; /* Dark background */
+            color: #e0e0e0; /* Light text color */
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -25,6 +26,7 @@
             overflow-x: hidden;
         }
 
+        /* Background gradient and animation for a modern look */
         body::before {
             content: '';
             position: fixed;
@@ -32,10 +34,10 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: 
-                radial-gradient(circle at 20% 30%, rgba(220, 38, 38, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(127, 29, 29, 0.1) 0%, transparent 50%),
-                url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><circle cx="50" cy="50" r="8" fill="rgba(127,29,29,0.05)"/><rect x="30" y="42" width="40" height="16" rx="8" fill="rgba(127,29,29,0.05)"/><circle cx="150" cy="150" r="12" fill="rgba(127,29,29,0.04)"/><rect x="130" y="140" width="40" height="20" rx="10" fill="rgba(127,29,29,0.04)"/></svg>');
+            background:
+                radial-gradient(circle at 20% 30%, rgba(95, 48, 255, 0.2) 0%, transparent 50%), /* Purple gradient */
+                radial-gradient(circle at 80% 70%, rgba(255, 107, 107, 0.2) 0%, transparent 50%), /* Red gradient */
+                url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><circle cx="50" cy="50" r="8" fill="rgba(150,100,255,0.05)"/><rect x="30" y="42" width="40" height="16" rx="8" fill="rgba(150,100,255,0.05)"/><circle cx="150" cy="150" r="12" fill="rgba(255,107,107,0.04)"/><rect x="130" y="140" width="40" height="20" rx="10" fill="rgba(255,107,107,0.04)"/></svg>');
             background-size: 100% 100%, 100% 100%, 200px 200px;
             z-index: -1;
             animation: float 20s infinite linear;
@@ -46,201 +48,218 @@
             100% { background-position: 0% 0%, 0% 0%, 200px 200px; }
         }
 
-        .login-container {
-            background: rgba(20, 20, 20, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 0 30px rgba(220, 38, 38, 0.3);
-            border: 2px solid rgba(220, 38, 38, 0.3);
+        .auth-container {
+            background: rgba(25, 25, 25, 0.9); /* Slightly transparent dark background */
+            border-radius: 24px; /* More rounded corners */
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(100, 100, 255, 0.2); /* Enhanced shadow with blue tint */
+            border: 2px solid rgba(60, 60, 150, 0.3); /* Subtle border */
             overflow: hidden;
             width: 100%;
-            max-width: 400px;
-            backdrop-filter: blur(10px);
+            max-width: 460px;
+            backdrop-filter: blur(15px); /* Stronger blur effect */
         }
 
-        .login-header {
-            background: linear-gradient(135deg, rgba(220, 38, 38, 0.9) 0%, rgba(127, 29, 29, 0.9) 100%);
+        .auth-header {
+            background: linear-gradient(135deg, rgba(95, 48, 255, 0.9) 0%, rgba(150, 100, 255, 0.9) 100%); /* Gradient for header */
             color: #ffffff;
-            padding: 40px 30px;
+            padding: 50px 40px;
             text-align: center;
             position: relative;
-            border-bottom: 2px solid rgba(220, 38, 38, 0.3);
+            border-bottom: 2px solid rgba(100, 100, 255, 0.2);
         }
 
-        .login-header::before {
-            content: '';
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            width: 30px;
-            height: 15px;
-            background: 
-                radial-gradient(circle at 25% 50%, rgba(255,255,255,0.3) 3px, transparent 3px),
-                radial-gradient(circle at 75% 50%, rgba(255,255,255,0.3) 3px, transparent 3px),
-                linear-gradient(90deg, transparent 20%, rgba(255,255,255,0.3) 20%, rgba(255,255,255,0.3) 80%, transparent 80%);
-            background-size: 30px 15px, 30px 15px, 30px 3px;
-            background-position: 0 0, 0 0, 0 6px;
-            background-repeat: no-repeat;
-            opacity: 0.7;
+        .brand-text {
+            font-size: 2.5rem; /* Larger brand text */
+            font-weight: 700;
+            margin-bottom: 15px;
+            line-height: 1;
         }
 
-        .logo {
-            font-size: 3rem;
-            margin-bottom: 10px;
-            position: relative;
-            z-index: 1;
-            width: 60px;
-            height: 30px;
-            margin: 0 auto 10px;
-            background: 
-                radial-gradient(circle at 15% 50%, rgba(255,255,255,0.9) 6px, transparent 6px),
-                radial-gradient(circle at 85% 50%, rgba(255,255,255,0.9) 6px, transparent 6px),
-                linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.9) 25%, rgba(255,255,255,0.9) 75%, transparent 75%);
-            background-size: 60px 30px, 60px 30px, 60px 6px;
-            background-position: 0 0, 0 0, 0 12px;
-            background-repeat: no-repeat;
+        .brand-kronos {
+            color: #ffffff; /* White for Kronos */
         }
 
-        .login-header h2 {
-            font-size: 1.8rem;
+        .brand-iq {
+            color: #ffffff; /* White for IQ */
+            font-weight: 300; /* Lighter weight for IQ */
+            margin-left: 5px;
+        }
+
+        .auth-header h2 {
+            font-size: 2rem; /* Larger heading */
             font-weight: 600;
-            margin-bottom: 8px;
-            position: relative;
-            z-index: 1;
-            text-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
+            margin-bottom: 10px;
+            text-shadow: 0 0 15px rgba(95, 48, 255, 0.5); /* Purple text shadow */
         }
 
-        .login-header p {
+        .auth-header p {
             opacity: 0.9;
-            font-size: 1rem;
-            position: relative;
-            z-index: 1;
+            font-size: 1.1rem; /* Slightly larger paragraph text */
         }
 
-        .login-content {
-            padding: 40px 30px;
+        .auth-body {
+            padding: 40px 40px;
         }
 
         .form-group {
-            margin-bottom: 25px;
+            margin-bottom: 30px; /* Increased margin */
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 8px;
-            color: #dc2626;
+            margin-bottom: 10px; /* Increased margin */
+            color: #ffffff; /* White label color */
             font-weight: 500;
-            font-size: 0.9rem;
+            font-size: 1rem; /* Larger label font size */
         }
 
         input[type="text"], input[type="password"] {
             width: 100%;
-            padding: 16px 20px;
-            font-size: 16px;
-            border: 2px solid rgba(220, 38, 38, 0.3);
-            border-radius: 12px;
-            background: rgba(31, 31, 31, 0.8);
-            color: #ffffff;
+            padding: 18px 20px; /* More padding */
+            font-size: 1rem; /* Larger input font size */
+            border: 2px solid rgba(100, 100, 255, 0.3); /* Purple border */
+            border-radius: 14px; /* More rounded input fields */
+            background: rgba(30, 30, 30, 0.9); /* Darker input background */
+            color: #e0e0e0;
             transition: all 0.3s ease;
-            font-family: 'Source Sans Pro', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
         input[type="text"]:focus, input[type="password"]:focus {
             outline: none;
-            border-color: #dc2626;
-            background: rgba(31, 31, 31, 0.9);
-            box-shadow: 0 0 15px rgba(220, 38, 38, 0.3);
+            border-color: #ffffff; /* White border on focus */
+            background: rgba(40, 40, 40, 0.95); /* Slightly lighter background on focus */
+            box-shadow: 0 0 20px rgba(150, 100, 255, 0.4); /* Purple glow on focus */
         }
 
         input[type="text"]::placeholder, input[type="password"]::placeholder {
-            color: rgba(220, 38, 38, 0.5);
+            color: rgba(200, 200, 255, 0.5); /* Lighter placeholder color */
         }
 
         .btn-primary {
             width: 100%;
-            padding: 16px;
-            font-size: 16px;
+            padding: 18px; /* More padding */
+            font-size: 1.1rem; /* Larger button text */
             font-weight: 600;
-            background: linear-gradient(135deg, rgba(220, 38, 38, 0.8) 0%, rgba(127, 29, 29, 0.8) 100%);
+            background: linear-gradient(135deg, rgba(95, 48, 255, 0.9) 0%, rgba(150, 100, 255, 0.9) 100%); /* Purple gradient button */
             color: #ffffff;
-            border: 2px solid rgba(220, 38, 38, 0.3);
-            border-radius: 12px;
+            border: none; /* Remove border */
+            border-radius: 14px; /* Rounded button */
             cursor: pointer;
             transition: all 0.3s ease;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 20px;
-            text-shadow: 0 0 5px rgba(220, 38, 38, 0.5);
+            text-shadow: 0 0 10px rgba(95, 48, 255, 0.5); /* Purple text shadow */
+            box-shadow: 0 5px 15px rgba(95, 48, 255, 0.3); /* Button shadow */
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(220, 38, 38, 0.3);
-            background: linear-gradient(135deg, rgba(127, 29, 29, 0.9) 0%, rgba(127, 29, 29, 0.9) 100%);
+            transform: translateY(-3px); /* Lift effect on hover */
+            box-shadow: 0 8px 25px rgba(150, 100, 255, 0.4); /* Stronger shadow on hover */
+            background: linear-gradient(135deg, rgba(120, 80, 255, 0.9) 0%, rgba(180, 130, 255, 0.9) 100%); /* Slightly lighter gradient on hover */
         }
 
         .btn-primary:active {
-            transform: translateY(0);
+            transform: translateY(0); /* Reset transform on active */
         }
 
-        .error {
-            background: rgba(255, 0, 0, 0.1);
-            color: #ff6b6b;
-            padding: 16px 20px;
-            border-radius: 12px;
-            border-left: 4px solid #ff6b6b;
+        .alert-error { /* Renamed from .error */
+            background: rgba(255, 80, 80, 0.1); /* Reddish background for error */
+            color: #ff8080; /* Light red text */
+            padding: 18px 20px; /* More padding */
+            border-radius: 14px; /* Rounded error box */
+            border-left: 5px solid #ff6b6b; /* Red border */
             border: 1px solid rgba(255, 107, 107, 0.3);
-            margin-bottom: 25px;
+            margin-bottom: 30px; /* Increased margin */
             font-weight: 500;
-            font-size: 0.9rem;
+            font-size: 1rem; /* Larger font size */
         }
 
-        .signup-link {
+        .alert-error strong {
+            color: #ffcccc; /* Lighter red for strong tag */
+        }
+
+        .auth-footer {
             text-align: center;
-            padding-top: 20px;
-            border-top: 1px solid rgba(220, 38, 38, 0.3);
+            padding: 30px 40px; /* Increased padding */
+            border-top: 1px solid rgba(50, 50, 100, 0.3); /* Subtle border */
         }
 
-        .signup-link a {
-            color: #dc2626;
+        .auth-footer a {
+            color: #9575cd; /* Purple link color */
             text-decoration: none;
             font-weight: 500;
-            transition: color 0.3s ease;
-            text-shadow: 0 0 5px rgba(220, 38, 38, 0.3);
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+            font-size: 1.1rem; /* Larger link font size */
+            text-shadow: 0 0 5px rgba(150, 100, 255, 0.3); /* Purple text shadow */
         }
 
-        .signup-link a:hover {
-            color: #ef4444;
-            text-shadow: 0 0 10px rgba(239, 68, 68, 0.7);
+        .auth-footer a:hover {
+            color: #ffffff; /* White on hover */
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.7); /* White glow on hover */
         }
 
         @media (max-width: 480px) {
-            .login-container {
+            .auth-container {
                 margin: 10px;
-                border-radius: 16px;
+                border-radius: 18px;
             }
 
-            .login-header {
-                padding: 30px 20px;
+            .auth-header {
+                padding: 40px 30px;
             }
 
-            .login-content {
-                padding: 30px 20px;
+            .brand-text {
+                font-size: 2rem;
+            }
+
+            .auth-header h2 {
+                font-size: 1.8rem;
+            }
+
+            .auth-header p {
+                font-size: 1rem;
+            }
+
+            .auth-body {
+                padding: 30px 30px;
+            }
+
+            input[type="text"], input[type="password"] {
+                padding: 15px 18px;
+                font-size: 0.95rem;
+            }
+
+            .btn-primary {
+                padding: 15px;
+                font-size: 1rem;
+            }
+
+            .auth-footer {
+                padding: 25px 30px;
+            }
+
+            .auth-footer a {
+                font-size: 1rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-header">
-            <div class="logo">💪</div>
+    <div class="auth-container">
+        <div class="auth-header">
+            <div class="brand-text">
+                <span class="brand-kronos">Kronos</span><span class="brand-iq">IQ</span>
+            </div>
             <h2>Welcome Back</h2>
-            <p>Sign in to CedHealth</p>
+            <p>Sign in to your account</p>
         </div>
 
-        <div class="login-content">
+        <div class="auth-body">
             {% if error %}
-                <div class="error">
-                    <strong>⚠️ Error:</strong> {{ error }}
+                <div class="alert alert-error">
+                    <strong>Error:</strong> {{ error }}
                 </div>
             {% endif %}
 
@@ -257,37 +276,11 @@
 
                 <button type="submit" class="btn-primary">Sign In</button>
             </form>
-
-            <div class="signup-link">
-                <a href="/signup">Don't have an account? Create one</a>
-            </div>
         </div>
 
-        <div class="back-link">
-            <a href="/dashboard">← Return to Dashboard</a>
+        <div class="auth-footer">
+            <a href="/signup">Don't have an account? Create one</a>
         </div>
     </div>
-
-    <style>
-        .back-link {
-            text-align: center;
-            margin-top: 20px;
-            padding-top: 20px;
-        }
-
-        .back-link a {
-            color: #dc2626;
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s ease;
-            font-size: 1.1rem;
-            text-shadow: 0 0 5px rgba(220, 38, 38, 0.3);
-        }
-
-        .back-link a:hover {
-            color: #ef4444;
-            text-shadow: 0 0 10px rgba(239, 68, 68, 0.7);
-        }
-    </style>
 </body>
 </html>

@@ -1,19 +1,19 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}CedHealth{% endblock %}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>{% block title %}KronosIQ{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
 </head>
 <body>
     <div class="logo-wrapper">
         <a href="{{ url_for('dashboard') }}">
-            <img src="{{ url_for('static', filename='logo.png') }}" alt="Kronos IQ Logo" height="60">
             <div class="brand-text">
-                <h1>KronosIQ</h1>
+                <h1><span class="brand-kronos">Kronos</span><span class="brand-iq">IQ</span></h1>
                 <p class="tagline">Built for War. Wired for Growth.</p>
             </div>
         </a>
