@@ -169,6 +169,13 @@ def home():
     return redirect(url_for('login'))
 
 
+@app.route('/sw.js')
+def service_worker():
+    """Serve the service worker from the static directory"""
+    from flask import send_from_directory
+    return send_from_directory('static', 'sw.js', mimetype='application/javascript')
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None

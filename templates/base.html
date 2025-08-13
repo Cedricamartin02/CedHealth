@@ -5,11 +5,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}KronosIQ{% endblock %}</title>
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#5f30ff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KronosIQ">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- iOS specific meta tags -->
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.svg') }}">
+    <meta name="apple-touch-fullscreen" content="yes">
+    
+    <!-- Windows/MS specific meta tags -->
+    <meta name="msapplication-TileColor" content="#5f30ff">
+    <meta name="msapplication-config" content="none">
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
 </head>
 <body>
+    <!-- PWA Install Prompt -->
+    <div id="install-prompt" class="install-prompt" style="display: none;">
+        <div class="install-prompt-content">
+            <h3>📱 Install KronosIQ</h3>
+            <p>Install our app for the best experience!</p>
+            <div class="install-buttons">
+                <button id="install-button" class="btn btn-primary">Install App</button>
+                <button id="dismiss-install" class="btn btn-outline">Maybe Later</button>
+            </div>
+        </div>
+    </div>
+
     <div class="logo-wrapper">
         <a href="{{ url_for('dashboard') }}">
             <div class="brand-text">
@@ -20,5 +49,188 @@
     </div>
     
     {% block content %}{% endblock %}
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                    const registration = await navigator.serviceWorker.register('/static/sw.js');
+                    console.log('SW registered: ', registration);
+                    
+                    // Check for updates
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed') {
+                                if (navigator.serviceWorker.controller) {
+                                    // New content is available, notify user
+                                    showUpdateNotification();
+                                }
+                            }
+                        });
+                    });
+                } catch (registrationError) {
+                    console.log('SW registration failed: ', registrationError);
+                }
+            });
+        }
+
+        // PWA Install Prompt
+        let deferredPrompt;
+        const installPrompt = document.getElementById('install-prompt');
+        const installButton = document.getElementById('install-button');
+        const dismissButton = document.getElementById('dismiss-install');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Don't show if already dismissed recently
+            if (!localStorage.getItem('install-dismissed')) {
+                installPrompt.style.display = 'block';
+            }
+        });
+
+        installButton?.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to the install prompt: ${outcome}`);
+                deferredPrompt = null;
+                installPrompt.style.display = 'none';
+            }
+        });
+
+        dismissButton?.addEventListener('click', () => {
+            installPrompt.style.display = 'none';
+            localStorage.setItem('install-dismissed', Date.now());
+        });
+
+        // Hide install prompt when app is installed
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA was installed');
+            installPrompt.style.display = 'none';
+        });
+
+        // Show update notification
+        function showUpdateNotification() {
+            if (confirm('A new version is available. Reload to update?')) {
+                window.location.reload();
+            }
+        }
+
+        // Network status indicator
+        function updateNetworkStatus() {
+            const isOnline = navigator.onLine;
+            document.body.classList.toggle('offline', !isOnline);
+            
+            if (!isOnline) {
+                showToast('You are offline. Some features may be limited.', 'warning');
+            }
+        }
+
+        window.addEventListener('online', updateNetworkStatus);
+        window.addEventListener('offline', updateNetworkStatus);
+        
+        // Simple toast notification function
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: var(--tertiary-bg);
+                color: var(--text-primary);
+                padding: 12px 24px;
+                border-radius: 8px;
+                border-left: 4px solid var(--accent-color);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                z-index: 1000;
+                animation: slideUp 0.3s ease;
+            `;
+            
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+    </script>
+
+    <style>
+        @keyframes slideUp {
+            from { transform: translateX(-50%) translateY(100%); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+        
+        .install-prompt {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border-top: 2px solid var(--accent-color);
+            padding: var(--space-lg);
+            z-index: 1000;
+            box-shadow: 0 -4px 20px var(--shadow-medium);
+        }
+        
+        .install-prompt-content {
+            max-width: 500px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .install-prompt h3 {
+            color: var(--text-primary);
+            margin-bottom: var(--space-sm);
+            font-size: 1.2rem;
+        }
+        
+        .install-prompt p {
+            color: var(--text-secondary);
+            margin-bottom: var(--space-lg);
+        }
+        
+        .install-buttons {
+            display: flex;
+            gap: var(--space-md);
+            justify-content: center;
+        }
+        
+        .install-buttons .btn {
+            padding: var(--space-sm) var(--space-lg);
+            font-size: 0.9rem;
+        }
+        
+        .offline {
+            filter: grayscale(20%);
+        }
+        
+        .offline::before {
+            content: "⚠️ Offline Mode";
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #f59e0b;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 1001;
+        }
+        
+        @media (max-width: 768px) {
+            .install-buttons {
+                flex-direction: column;
+            }
+            
+            .install-buttons .btn {
+                width: 100%;
+            }
+        }
+    </style>
 </body>
 </html>

@@ -455,6 +455,35 @@ tr:hover {
     padding: var(--space-xl);
 }
 
+/* PWA Specific Styles */
+@media (display-mode: standalone) {
+    /* Hide certain elements when running as PWA */
+    .logo-wrapper {
+        padding-top: var(--space-lg);
+    }
+    
+    /* Add safe area padding for devices with notches */
+    body {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+    }
+    
+    /* Make app feel more native */
+    .main-container, .container {
+        max-width: 100%;
+        margin: 0;
+        border-radius: 0;
+        min-height: 100vh;
+    }
+    
+    .card {
+        border-radius: var(--radius-md);
+        margin-bottom: var(--space-md);
+    }
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
     .nav-container {
