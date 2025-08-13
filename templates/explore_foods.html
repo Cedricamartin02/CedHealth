@@ -286,7 +286,6 @@
             <div class="explore-tabs">
                 <button class="explore-tab active" onclick="switchTab('barcode-scanner')">📱 Barcode Scanner</button>
                 <button class="explore-tab" onclick="switchTab('food-search')">🔍 Food Search</button>
-                <button class="explore-tab" onclick="switchTab('nutrition-lookup')">📊 Nutrition Lookup</button>
             </div>
 
             <!-- Barcode Scanner Tab -->
@@ -400,68 +399,7 @@
                 </div>
             </div>
 
-            <!-- Nutrition Lookup Tab -->
-            <div id="nutrition-lookup" class="tab-content">
-                <div class="section-card">
-                    <h2>📊 Nutrition Lookup</h2>
-                    <p>Get detailed nutrition information for any food</p>
-                    
-                    {% if error_message and request.form.get('action') == 'lookup_food' %}
-                        <div class="error">{{ error_message }}</div>
-                    {% endif %}
-
-                    <form method="POST" action="{{ url_for('explore_foods') }}">
-                        <div class="form-group">
-                            <div class="input-wrapper">
-                                <input type="text" 
-                                       name="food_query" 
-                                       placeholder="Enter food with quantity (e.g., 1 cup rice, 100g chicken breast)" 
-                                       required>
-                            </div>
-                            <button type="submit" name="action" value="lookup_food" class="btn">Get Nutrition Info</button>
-                        </div>
-                    </form>
-
-                    {% if food_nutrition %}
-                        <div class="nutrition-card">
-                            <h3>Nutrition Information</h3>
-                            
-                            <div class="nutrition-name">{{ food_nutrition.name }}</div>
-                            
-                            <div class="nutrition-grid">
-                                <div class="nutrition-item">
-                                    <div class="nutrition-value">{{ "%.0f"|format(food_nutrition.calories) }}</div>
-                                    <div class="nutrition-label">Calories</div>
-                                </div>
-                                <div class="nutrition-item">
-                                    <div class="nutrition-value">{{ "%.1f"|format(food_nutrition.protein) }}g</div>
-                                    <div class="nutrition-label">Protein</div>
-                                </div>
-                                <div class="nutrition-item">
-                                    <div class="nutrition-value">{{ "%.1f"|format(food_nutrition.fat) }}g</div>
-                                    <div class="nutrition-label">Fat</div>
-                                </div>
-                                <div class="nutrition-item">
-                                    <div class="nutrition-value">{{ "%.1f"|format(food_nutrition.carbs) }}g</div>
-                                    <div class="nutrition-label">Carbs</div>
-                                </div>
-                                <div class="nutrition-item">
-                                    <div class="nutrition-value">{{ "%.1f"|format(food_nutrition.fiber) }}g</div>
-                                    <div class="nutrition-label">Fiber</div>
-                                </div>
-                                <div class="nutrition-item">
-                                    <div class="nutrition-value">{{ "%.1f"|format(food_nutrition.sugar) }}g</div>
-                                    <div class="nutrition-label">Sugar</div>
-                                </div>
-                                <div class="nutrition-item">
-                                    <div class="nutrition-value">{{ "%.0f"|format(food_nutrition.sodium) }}mg</div>
-                                    <div class="nutrition-label">Sodium</div>
-                                </div>
-                            </div>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
+            
 
             <div class="back-link">
                 <a href="/dashboard">← Return to Dashboard</a>
