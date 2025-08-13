@@ -1,0 +1,91 @@
+Convert my Flask app into a Progressive Web App (PWA). Make these exact changes:
+
+1) Create /static/manifest.json:
+{
+  "name": "CedHealth",
+  "short_name": "CedHealth",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1e90ff",
+  "icons": [
+    { "src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
+
+2) Add two placeholder icons:
+- /static/icons/icon-192.png
+- /static/icons/icon-512.png
+(Generate simple blue squares if assets don’t exist.)
+
+3) Add a service worker at the web root so scope is '/':
+Create a Flask route to serve it at /service-worker.js and the JS file in /static/pwa/service-worker.js.
+
+In app (cedhealth_app.py) add:
+from flask import send_from_directory
+
+@app.route('/service-worker.js')
+def service_worker():
+    return send_from_directory('static/pwa', 'service-worker.js', mimetype='application/javascript')
+
+4) Create /static/pwa/service-worker.js with basic offline caching:
+const CACHE_NAME = "cedhealth-v1";
+const ASSETS = [
+  "/", 
+  "/static/style.css"
+  // add other critical assets here (e.g., "/static/app.js", logos, fonts)
+];
+
+self.addEventListener("install", event => {
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
+});
+
+self.addEventListener("fetch", event => {
+  const req = event.request;
+  // Network-first for HTML navigations; cache-first for others
+  if (req.mode === "navigate") {
+    event.respondWith(
+      fetch(req).catch(() => caches.match("/"))
+    );
+  } else {
+    event.respondWith(
+      caches.match(req).then(cached => cached || fetch(req))
+    );
+  }
+});
+
+5) In base template (e.g., templates/base.html), inside <head>:
+<link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+<meta name="theme-color" content="#1e90ff">
+
+Right before </body>, register the service worker:
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(r => console.log('SW registered', r))
+      .catch(e => console.error('SW failed', e));
+  });
+}
+</script>
+
+6) Make sure meta tags for mobile are present in base.html <head>:
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+
+7) Ensure HTTPS in deployment and responsive CSS. Then run Lighthouse (Chrome DevTools) and fix any PWA installability issues it reports.
+
+8) Tell me what files were changed and where, and run the app so I can test.
