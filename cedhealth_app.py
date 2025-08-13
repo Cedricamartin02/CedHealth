@@ -2,9 +2,11 @@ from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
 import requests
 from datetime import datetime
+from db_utils import get_db, close_db, execute, begin, commit, rollback
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
+app.teardown_appcontext(close_db)
 
 # Nutritionix API Keys
 API_URL = "https://trackapi.nutritionix.com/v2/natural/nutrients"
@@ -214,21 +216,23 @@ def signup():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        begin()
         try:
-            conn = sqlite3.connect('cedhealth.db')
-            c = conn.cursor()
-            c.execute('INSERT INTO users (username, password) VALUES (?, ?)',
-                      (username, password))
-            user_id = c.lastrowid
-            conn.commit()
-            conn.close()
+            result = execute('INSERT INTO users (username, password) VALUES (?, ?)',
+                           (username, password))
+            user_id = result.lastrowid
+            commit()
             
             # Auto-login and redirect to initial goals
             session['user_id'] = user_id
             session['username'] = username
             return redirect(url_for('initial_goals'))
         except sqlite3.IntegrityError:
+            rollback()
             error = 'Username already exists.'
+        except Exception as e:
+            rollback()
+            error = f'Error creating account: {str(e)}'
     return render_template('signup.html', error=error)
 
 
