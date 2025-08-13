@@ -1,0 +1,86 @@
+Fix SQLite “database is locked” in my Flask app:
+
+1) Create a helpers file db_utils.py with:
+------------------------------------------
+import sqlite3
+from flask import g
+
+DB_PATH = "cedhealth.db"
+
+def get_db():
+    if "db" not in g:
+        conn = sqlite3.connect(
+            DB_PATH,
+            timeout=10,                # wait up to 10s for a busy DB
+            isolation_level=None,      # autocommit; we'll use BEGIN for writes
+            detect_types=sqlite3.PARSE_DECLTYPES
+        )
+        conn.row_factory = sqlite3.Row
+        # Improve concurrency & locking behavior
+        conn.execute("PRAGMA journal_mode=WAL;")
+        conn.execute("PRAGMA synchronous=NORMAL;")
+        conn.execute("PRAGMA busy_timeout=10000;")
+        g.db = conn
+    return g.db
+
+def close_db(e=None):
+    db = g.pop("db", None)
+    if db is not None:
+        db.close()
+
+def execute(query, params=()):
+    db = get_db()
+    return db.execute(query, params)
+
+def executemany(query, seq):
+    db = get_db()
+    return db.executemany(query, seq)
+
+def begin():
+    execute("BEGIN")
+
+def commit():
+    execute("COMMIT")
+
+def rollback():
+    execute("ROLLBACK")
+
+2) In my main app (cedhealth_app.py):
+-------------------------------------
+- Import and register teardown:
+from db_utils import get_db, close_db, execute, begin, commit, rollback
+from flask import Flask, render_template, request, redirect, url_for, session
+
+app = Flask(__name__)
+app.teardown_appcontext(close_db)
+
+# Example usage in routes:
+# READ (no explicit tx needed)
+# rows = execute("SELECT * FROM users WHERE username = ?", (u,)).fetchall()
+
+# WRITE (explicit short transaction)
+# begin()
+# try:
+#     execute("INSERT INTO users (username, password) VALUES (?, ?)", (u, p))
+#     commit()
+# except Exception:
+#     rollback()
+#     raise
+
+3) Update ALL write routes (sign up, log meal, set goals) to wrap writes in BEGIN/COMMIT with very short transactions as above. Keep transactions as short as possible.
+
+4) Ensure I am NOT sharing a global sqlite3 connection anywhere else. Replace any previous sqlite3.connect(...) calls with the helpers.
+
+5) Run the dev server single-threaded to reduce lock contention during development:
+if __name__ == "__main__":
+    import os
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), threaded=False)
+
+6) Clean up any stale lock files once (ONLY if app is stopped):
+- Delete cedhealth.db-shm and cedhealth.db-wal if they exist.
+- Then run the app again.
+
+7) Print a log line whenever a write happens so I can see contention:
+- Add simple prints around begin()/commit() in write routes.
+
+After changes, restart the repl and test creating an account again.
