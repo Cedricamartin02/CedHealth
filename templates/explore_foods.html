@@ -144,6 +144,97 @@
             font-family: monospace;
             letter-spacing: 1px;
         }
+
+        .camera-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 12px;
+            border: 2px dashed #cbd5e1;
+            text-align: center;
+        }
+
+        .camera-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .camera-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .camera-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .camera-btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #video-container {
+            position: relative;
+            display: none;
+            margin: 20px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #camera-video {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+        }
+
+        .capture-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 60%;
+            border: 3px solid #ef4444;
+            border-radius: 8px;
+            background: rgba(239, 68, 68, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        }
+
+        #canvas {
+            display: none;
+        }
+
+        .scan-result {
+            margin-top: 15px;
+            padding: 15px;
+            background: #dcfce7;
+            border: 2px solid #16a34a;
+            border-radius: 8px;
+            color: #15803d;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -171,11 +262,12 @@
                         <div class="error">{{ error_message }}</div>
                     {% endif %}
 
-                    <form method="POST" action="{{ url_for('explore_foods') }}">
+                    <form method="POST" action="{{ url_for('explore_foods') }}" id="barcode-form">
                         <div class="form-group">
                             <div class="input-wrapper">
                                 <input type="text" 
                                        name="barcode" 
+                                       id="barcode-input"
                                        class="barcode-input"
                                        placeholder="Enter barcode (e.g., 3017620422003)" 
                                        pattern="[0-9]+"
@@ -184,6 +276,33 @@
                             <button type="submit" name="action" value="scan_barcode" class="btn">Scan Product</button>
                         </div>
                     </form>
+
+                    <div class="camera-section">
+                        <h3>📷 Or scan with camera</h3>
+                        <p>Use your device's camera to scan a barcode directly</p>
+                        
+                        <div class="camera-controls">
+                            <button id="start-camera" class="camera-btn">
+                                📷 Start Camera
+                            </button>
+                            <button id="capture-photo" class="camera-btn" disabled>
+                                📸 Capture Photo
+                            </button>
+                            <button id="stop-camera" class="camera-btn" disabled>
+                                ⏹️ Stop Camera
+                            </button>
+                        </div>
+
+                        <div id="video-container">
+                            <video id="camera-video" autoplay playsinline></video>
+                            <div class="capture-overlay">
+                                Position barcode here and click capture
+                            </div>
+                        </div>
+
+                        <canvas id="canvas"></canvas>
+                        <div id="scan-result"></div>
+                    </div>
 
                     {% if product_info %}
                         <div class="product-card">
@@ -308,8 +427,110 @@
         </div>
     </div>
 
+    <script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
     <script>
         let searchTimeout;
+        let cameraStream = null;
+        let codeReader = null;
+
+        // Initialize barcode reader
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof ZXing !== 'undefined') {
+                codeReader = new ZXing.BrowserMultiFormatReader();
+            }
+        });
+
+        // Camera controls
+        const startCameraBtn = document.getElementById('start-camera');
+        const captureBtn = document.getElementById('capture-photo');
+        const stopCameraBtn = document.getElementById('stop-camera');
+        const video = document.getElementById('camera-video');
+        const videoContainer = document.getElementById('video-container');
+        const canvas = document.getElementById('canvas');
+        const scanResult = document.getElementById('scan-result');
+        const barcodeInput = document.getElementById('barcode-input');
+
+        startCameraBtn?.addEventListener('click', async () => {
+            try {
+                // Request camera access
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        facingMode: 'environment', // Use back camera if available
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                });
+                
+                video.srcObject = cameraStream;
+                videoContainer.style.display = 'block';
+                
+                startCameraBtn.disabled = true;
+                captureBtn.disabled = false;
+                stopCameraBtn.disabled = false;
+                
+                scanResult.innerHTML = '<div style="color: #3b82f6;">📷 Camera started! Position barcode in the red frame and click capture.</div>';
+                
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+                scanResult.innerHTML = '<div style="color: #ef4444;">❌ Could not access camera. Please check permissions.</div>';
+            }
+        });
+
+        captureBtn?.addEventListener('click', () => {
+            if (!video.videoWidth || !video.videoHeight) {
+                scanResult.innerHTML = '<div style="color: #ef4444;">❌ Camera not ready. Please wait a moment.</div>';
+                return;
+            }
+
+            // Set canvas size to match video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            // Draw video frame to canvas
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+            
+            // Try to decode barcode from canvas
+            if (codeReader) {
+                scanResult.innerHTML = '<div style="color: #3b82f6;">🔍 Scanning for barcode...</div>';
+                
+                codeReader.decodeFromCanvas(canvas)
+                    .then(result => {
+                        const barcode = result.getText();
+                        barcodeInput.value = barcode;
+                        scanResult.innerHTML = `<div class="scan-result">✅ Barcode detected: ${barcode}</div>`;
+                        
+                        // Auto-submit form after successful scan
+                        setTimeout(() => {
+                            if (confirm('Barcode detected! Submit form to get product information?')) {
+                                document.getElementById('barcode-form').submit();
+                            }
+                        }, 1000);
+                    })
+                    .catch(error => {
+                        console.error('Barcode scan error:', error);
+                        scanResult.innerHTML = '<div style="color: #f59e0b;">⚠️ No barcode detected. Try repositioning and capturing again.</div>';
+                    });
+            } else {
+                scanResult.innerHTML = '<div style="color: #ef4444;">❌ Barcode scanner not available.</div>';
+            }
+        });
+
+        stopCameraBtn?.addEventListener('click', () => {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+            
+            video.srcObject = null;
+            videoContainer.style.display = 'none';
+            
+            startCameraBtn.disabled = false;
+            captureBtn.disabled = true;
+            stopCameraBtn.disabled = true;
+            
+            scanResult.innerHTML = '';
+        });
 
         function switchTab(tabName) {
             // Hide all tab contents
