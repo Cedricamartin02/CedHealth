@@ -235,6 +235,43 @@
             color: #15803d;
             font-weight: 600;
         }
+
+        .search-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .dropdown-item {
+            padding: 16px;
+            border-bottom: 1px solid #f1f5f9;
+            line-height: 1.4;
+        }
+
+        .dropdown-item strong {
+            color: #1f2937;
+        }
+
+        .dropdown-item small {
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+
+        #nutritionResults .nutrition-card {
+            margin-top: 0;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 <body>
@@ -342,8 +379,8 @@
             <!-- Food Search Tab -->
             <div id="food-search" class="tab-content">
                 <div class="section-card">
-                    <h2>🔍 Food Search</h2>
-                    <p>Search for foods with autocomplete suggestions</p>
+                    <h2>🔍 Food Search & Nutrition</h2>
+                    <p>Search for foods with autocomplete suggestions and get instant nutrition facts</p>
                     
                     <div class="search-wrapper">
                         <input type="text" 
@@ -354,7 +391,12 @@
                         <div class="dropdown" id="searchDropdown"></div>
                     </div>
                     
+                    <div class="search-actions" style="margin-top: 15px; text-align: center;">
+                        <button id="getNutritionBtn" class="btn" disabled>Get Nutrition Facts</button>
+                    </div>
+                    
                     <div id="searchResults"></div>
+                    <div id="nutritionResults"></div>
                 </div>
             </div>
 
@@ -622,14 +664,24 @@
             event.target.classList.add('active');
         }
 
-        // Food search functionality
+        // Food search functionality with integrated nutrition lookup
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('foodSearchInput');
             const dropdown = document.getElementById('searchDropdown');
+            const getNutritionBtn = document.getElementById('getNutritionBtn');
+            const nutritionResults = document.getElementById('nutritionResults');
+            
+            let selectedFood = null;
             
             if (searchInput) {
+                // Enable/disable nutrition button based on input
                 searchInput.addEventListener('input', function() {
                     const query = this.value.trim();
+                    
+                    if (query !== selectedFood) {
+                        selectedFood = null;
+                        getNutritionBtn.disabled = query.length === 0;
+                    }
                     
                     clearTimeout(searchTimeout);
                     
@@ -648,11 +700,17 @@
                                     data.common.forEach(item => {
                                         const div = document.createElement('div');
                                         div.className = 'dropdown-item';
-                                        div.textContent = item.food_name;
+                                        div.innerHTML = `<strong>${item.food_name}</strong><br><small style="color: #64748b;">Common food</small>`;
                                         div.addEventListener('click', () => {
                                             searchInput.value = item.food_name;
+                                            selectedFood = item.food_name;
                                             dropdown.style.display = 'none';
-                                            // Could trigger nutrition lookup here
+                                            getNutritionBtn.disabled = false;
+                                            
+                                            // Auto-trigger nutrition lookup for better UX
+                                            setTimeout(() => {
+                                                getNutritionFacts(item.food_name);
+                                            }, 100);
                                         });
                                         dropdown.appendChild(div);
                                     });
@@ -662,10 +720,18 @@
                                     data.branded.forEach(item => {
                                         const div = document.createElement('div');
                                         div.className = 'dropdown-item';
-                                        div.textContent = `${item.brand_name} ${item.food_name}`;
+                                        div.innerHTML = `<strong>${item.food_name}</strong><br><small style="color: #64748b;">${item.brand_name}</small>`;
                                         div.addEventListener('click', () => {
-                                            searchInput.value = `${item.brand_name} ${item.food_name}`;
+                                            const fullName = `${item.brand_name} ${item.food_name}`;
+                                            searchInput.value = fullName;
+                                            selectedFood = fullName;
                                             dropdown.style.display = 'none';
+                                            getNutritionBtn.disabled = false;
+                                            
+                                            // Auto-trigger nutrition lookup for better UX
+                                            setTimeout(() => {
+                                                getNutritionFacts(fullName);
+                                            }, 100);
                                         });
                                         dropdown.appendChild(div);
                                     });
@@ -688,6 +754,75 @@
                     setTimeout(() => {
                         dropdown.style.display = 'none';
                     }, 150);
+                });
+
+                // Handle Enter key to trigger nutrition lookup
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const query = this.value.trim();
+                        if (query) {
+                            getNutritionFacts(query);
+                        }
+                    }
+                });
+            }
+
+            // Get nutrition facts function
+            function getNutritionFacts(foodName) {
+                if (!foodName.trim()) return;
+                
+                getNutritionBtn.disabled = true;
+                getNutritionBtn.textContent = 'Loading...';
+                
+                nutritionResults.innerHTML = '<div style="text-align: center; color: #3b82f6; padding: 20px;">🔍 Getting nutrition information...</div>';
+                
+                // Create form data
+                const formData = new FormData();
+                formData.append('food_query', foodName);
+                formData.append('action', 'lookup_food');
+                
+                fetch('/explore_foods', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.text())
+                .then(html => {
+                    // Parse the response to extract nutrition data
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const nutritionCard = doc.querySelector('.nutrition-card');
+                    
+                    if (nutritionCard) {
+                        nutritionResults.innerHTML = nutritionCard.outerHTML;
+                        // Smooth scroll to results
+                        nutritionResults.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                        const errorDiv = doc.querySelector('.error');
+                        if (errorDiv) {
+                            nutritionResults.innerHTML = `<div style="color: #ef4444; padding: 20px; text-align: center;">❌ ${errorDiv.textContent}</div>`;
+                        } else {
+                            nutritionResults.innerHTML = '<div style="color: #f59e0b; padding: 20px; text-align: center;">⚠️ No nutrition data found for this food.</div>';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Nutrition lookup error:', error);
+                    nutritionResults.innerHTML = '<div style="color: #ef4444; padding: 20px; text-align: center;">❌ Error getting nutrition information. Please try again.</div>';
+                })
+                .finally(() => {
+                    getNutritionBtn.disabled = false;
+                    getNutritionBtn.textContent = 'Get Nutrition Facts';
+                });
+            }
+
+            // Manual nutrition lookup button
+            if (getNutritionBtn) {
+                getNutritionBtn.addEventListener('click', function() {
+                    const query = searchInput.value.trim();
+                    if (query) {
+                        getNutritionFacts(query);
+                    }
                 });
             }
         });
