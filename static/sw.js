@@ -1,5 +1,4 @@
-
-const CACHE_NAME = 'kronosiq-v1.0.0';
+const CACHE_NAME = 'kronosiq-v1';
 const STATIC_CACHE_URLS = [
   '/',
   '/dashboard',
@@ -47,8 +46,8 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - serve cached content when offline
 self.addEventListener('fetch', (event) => {
-  // Skip cross-origin requests
-  if (!event.request.url.startsWith(self.location.origin)) {
+  // Skip cross-origin requests and chrome-extension requests
+  if (!event.request.url.startsWith(self.location.origin) || event.request.url.startsWith('chrome-extension')) {
     return;
   }
 
@@ -116,7 +115,7 @@ self.addEventListener('push', (event) => {
         primaryKey: 1
       }
     };
-    
+
     event.waitUntil(
       self.registration.showNotification(data.title, options)
     );

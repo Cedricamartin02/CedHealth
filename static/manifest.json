@@ -1,24 +1,20 @@
-
 {
-  "name": "KronosIQ Health Tracker",
+  "name": "KronosIQ Health",
   "short_name": "KronosIQ",
   "description": "Your personal health and nutrition tracker",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#121212",
-  "theme_color": "#5f30ff",
-  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#4CAF50",
+  "scope": "/",
   "icons": [
     {
-      "src": "logo.svg",
+      "src": "/static/logo.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ],
-  "categories": ["health", "lifestyle", "fitness"],
-  "lang": "en",
-  "dir": "ltr",
-  "scope": "/",
-  "prefer_related_applications": false
+  "categories": ["health", "lifestyle"],
+  "orientation": "portrait"
 }
