@@ -20,144 +20,75 @@ HEADERS = {
 # Helper function to get nutrition data from multiple APIs
 def get_nutrition_from_multiple_apis(food_item):
     """
-    Queries multiple food nutrition APIs (Nutritionix, Open Food Facts, USDA, Edamam)
-    and returns comprehensive nutrition data.
+    Queries multiple food nutrition APIs and returns comprehensive nutrition data.
     """
     # 1. Try Nutritionix API (most comprehensive for common foods)
     try:
-        response = requests.post(API_URL, headers=HEADERS, json={"query": food_item})
-        data = response.json()
-        if 'foods' in data and data['foods']:
-            food = data['foods'][0]
-            return {
-                'name': food['food_name'],
-                'calories': food.get('nf_calories', 0),
-                'protein': food.get('nf_protein', 0),
-                'fat': food.get('nf_total_fat', 0),
-                'carbs': food.get('nf_total_carbohydrate', 0),
-                'fiber': food.get('nf_dietary_fiber', 0),
-                'sugar': food.get('nf_sugars', 0),
-                'sodium': food.get('nf_sodium', 0),
-                'potassium': food.get('nf_potassium', 0),
-                'cholesterol': food.get('nf_cholesterol', 0),
-                'saturated_fat': food.get('nf_saturated_fat', 0),
-                'calcium': food.get('nf_calcium', 0),
-                'iron': food.get('nf_iron', 0),
-                'vitamin_a': food.get('nf_vitamin_a_dv', 0),
-                'vitamin_c': food.get('nf_vitamin_c', 0),
-                'source': 'nutritionix'
-            }
+        response = requests.post(API_URL, headers=HEADERS, json={"query": food_item}, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            if 'foods' in data and data['foods']:
+                food = data['foods'][0]
+                return {
+                    'name': food['food_name'],
+                    'calories': food.get('nf_calories', 0),
+                    'protein': food.get('nf_protein', 0),
+                    'fat': food.get('nf_total_fat', 0),
+                    'carbs': food.get('nf_total_carbohydrate', 0),
+                    'fiber': food.get('nf_dietary_fiber', 0),
+                    'sugar': food.get('nf_sugars', 0),
+                    'sodium': food.get('nf_sodium', 0),
+                    'potassium': food.get('nf_potassium', 0),
+                    'cholesterol': food.get('nf_cholesterol', 0),
+                    'saturated_fat': food.get('nf_saturated_fat', 0),
+                    'calcium': food.get('nf_calcium', 0),
+                    'iron': food.get('nf_iron', 0),
+                    'vitamin_a': food.get('nf_vitamin_a_dv', 0),
+                    'vitamin_c': food.get('nf_vitamin_c', 0),
+                    'source': 'nutritionix'
+                }
     except Exception as e:
         print(f"Nutritionix API error for '{food_item}': {e}")
 
     # 2. Try USDA FoodData Central API
     try:
-        usda_api_key = "DEMO_KEY"  # Replace with actual key for production
-        search_url = f"https://api.nal.usda.gov/fdc/v1/foods/search?api_key={usda_api_key}&query={food_item}&pageSize=1"
-        response = requests.get(search_url, timeout=5)
-        data = response.json()
-        
-        if 'foods' in data and data['foods']:
-            food = data['foods'][0]
-            nutrients = food.get('foodNutrients', [])
-            
-            # Extract nutrients by nutrient ID
-            nutrition_map = {}
-            for nutrient in nutrients:
-                nutrient_id = nutrient.get('nutrientId')
-                value = nutrient.get('value', 0)
-                
-                # Map USDA nutrient IDs to our fields
-                if nutrient_id == 1008:  # Energy
-                    nutrition_map['calories'] = value
-                elif nutrient_id == 1003:  # Protein
-                    nutrition_map['protein'] = value
-                elif nutrient_id == 1004:  # Total lipid (fat)
-                    nutrition_map['fat'] = value
-                elif nutrient_id == 1005:  # Carbohydrate
-                    nutrition_map['carbs'] = value
-                elif nutrient_id == 1079:  # Fiber
-                    nutrition_map['fiber'] = value
-                elif nutrient_id == 2000:  # Sugars
-                    nutrition_map['sugar'] = value
-                elif nutrient_id == 1093:  # Sodium
-                    nutrition_map['sodium'] = value
-                elif nutrient_id == 1087:  # Calcium
-                    nutrition_map['calcium'] = value
-                elif nutrient_id == 1089:  # Iron
-                    nutrition_map['iron'] = value
-            
-            if nutrition_map:
-                return {
-                    'name': food.get('description', food_item),
-                    'calories': nutrition_map.get('calories', 0),
-                    'protein': nutrition_map.get('protein', 0),
-                    'fat': nutrition_map.get('fat', 0),
-                    'carbs': nutrition_map.get('carbs', 0),
-                    'fiber': nutrition_map.get('fiber', 0),
-                    'sugar': nutrition_map.get('sugar', 0),
-                    'sodium': nutrition_map.get('sodium', 0),
-                    'potassium': 0,
-                    'cholesterol': 0,
-                    'saturated_fat': 0,
-                    'calcium': nutrition_map.get('calcium', 0),
-                    'iron': nutrition_map.get('iron', 0),
-                    'vitamin_a': 0,
-                    'vitamin_c': 0,
-                    'source': 'usda'
-                }
-    except Exception as e:
-        print(f"USDA API error for '{food_item}': {e}")
-
-    # 3. Try FoodData Central with specific McDonald's search
-    try:
-        # First try with "McDonald's" prefix for better results
-        mcdonalds_query = f"mcdonald's {food_item}" if not food_item.lower().startswith('mc') and 'mcdonald' not in food_item.lower() else food_item
-        
         usda_api_key = "DEMO_KEY"
-        search_url = f"https://api.nal.usda.gov/fdc/v1/foods/search?api_key={usda_api_key}&query={mcdonalds_query}&pageSize=5&dataType=Branded"
-        response = requests.get(search_url, timeout=5)
-        data = response.json()
-        
-        if 'foods' in data and data['foods']:
-            # Look for McDonald's branded items first
-            for food in data['foods']:
-                brand_owner = food.get('brandOwner', '').lower()
-                description = food.get('description', '').lower()
+        search_url = f"https://api.nal.usda.gov/fdc/v1/foods/search?api_key={usda_api_key}&query={food_item}&pageSize=3"
+        response = requests.get(search_url, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            
+            if 'foods' in data and data['foods']:
+                food = data['foods'][0]
+                nutrients = food.get('foodNutrients', [])
                 
-                if 'mcdonald' in brand_owner or 'mcdonald' in description:
-                    nutrients = food.get('foodNutrients', [])
+                # Extract nutrients by nutrient ID
+                nutrition_map = {}
+                for nutrient in nutrients:
+                    nutrient_id = nutrient.get('nutrientId')
+                    value = nutrient.get('value', 0)
                     
-                    # Extract nutrients by nutrient ID
-                    nutrition_map = {}
-                    for nutrient in nutrients:
-                        nutrient_id = nutrient.get('nutrientId')
-                        value = nutrient.get('value', 0)
-                        
-                        # Map USDA nutrient IDs to our fields
-                        if nutrient_id == 1008:  # Energy
-                            nutrition_map['calories'] = value
-                        elif nutrient_id == 1003:  # Protein
-                            nutrition_map['protein'] = value
-                        elif nutrient_id == 1004:  # Total lipid (fat)
-                            nutrition_map['fat'] = value
-                        elif nutrient_id == 1005:  # Carbohydrate
-                            nutrition_map['carbs'] = value
-                        elif nutrient_id == 1079:  # Fiber
-                            nutrition_map['fiber'] = value
-                        elif nutrient_id == 2000:  # Sugars
-                            nutrition_map['sugar'] = value
-                        elif nutrient_id == 1093:  # Sodium
-                            nutrition_map['sodium'] = value / 1000 if value else 0  # Convert mg to g
-                        elif nutrient_id == 1087:  # Calcium
-                            nutrition_map['calcium'] = value
-                        elif nutrient_id == 1089:  # Iron
-                            nutrition_map['iron'] = value
-                        elif nutrient_id == 1258:  # Saturated fat
-                            nutrition_map['saturated_fat'] = value
-                        elif nutrient_id == 1253:  # Cholesterol
-                            nutrition_map['cholesterol'] = value
-                    
+                    # Map USDA nutrient IDs to our fields
+                    if nutrient_id == 1008:  # Energy
+                        nutrition_map['calories'] = value
+                    elif nutrient_id == 1003:  # Protein
+                        nutrition_map['protein'] = value
+                    elif nutrient_id == 1004:  # Total lipid (fat)
+                        nutrition_map['fat'] = value
+                    elif nutrient_id == 1005:  # Carbohydrate
+                        nutrition_map['carbs'] = value
+                    elif nutrient_id == 1079:  # Fiber
+                        nutrition_map['fiber'] = value
+                    elif nutrient_id == 2000:  # Sugars
+                        nutrition_map['sugar'] = value
+                    elif nutrient_id == 1093:  # Sodium
+                        nutrition_map['sodium'] = value
+                    elif nutrient_id == 1087:  # Calcium
+                        nutrition_map['calcium'] = value
+                    elif nutrient_id == 1089:  # Iron
+                        nutrition_map['iron'] = value
+                
+                if nutrition_map and nutrition_map.get('calories', 0) > 0:
                     return {
                         'name': food.get('description', food_item),
                         'calories': nutrition_map.get('calories', 0),
@@ -168,113 +99,83 @@ def get_nutrition_from_multiple_apis(food_item):
                         'sugar': nutrition_map.get('sugar', 0),
                         'sodium': nutrition_map.get('sodium', 0),
                         'potassium': 0,
-                        'cholesterol': nutrition_map.get('cholesterol', 0),
-                        'saturated_fat': nutrition_map.get('saturated_fat', 0),
+                        'cholesterol': 0,
+                        'saturated_fat': 0,
                         'calcium': nutrition_map.get('calcium', 0),
                         'iron': nutrition_map.get('iron', 0),
                         'vitamin_a': 0,
                         'vitamin_c': 0,
-                        'source': 'usda_branded'
+                        'source': 'usda'
                     }
     except Exception as e:
-        print(f"USDA Branded search error for '{food_item}': {e}")
+        print(f"USDA API error for '{food_item}': {e}")
 
-    # 4. Try Spoonacular Food API for McDonald's items
-    try:
-        spoonacular_api_key = "669ab752fed34d5ea3f9b188b1983b8b"
-        spoon_query = f"mcdonald's {food_item}" if not food_item.lower().startswith('mc') and 'mcdonald' not in food_item.lower() else food_item
-        spoon_url = f"https://api.spoonacular.com/food/ingredients/search?query={spoon_query}&apiKey={spoonacular_api_key}&number=3"
-        
-        response = requests.get(spoon_url, timeout=5)
-        data = response.json()
-        
-        if 'results' in data and data['results']:
-            for ingredient in data['results']:
-                ingredient_name = ingredient.get('name', '').lower()
-                if 'mcdonald' in ingredient_name or any(term in ingredient_name for term in ['big mac', 'quarter pounder', 'mcchicken', 'fries']):
-                    # Get detailed nutrition info
-                    ingredient_id = ingredient.get('id')
-                    if ingredient_id:
-                        detail_url = f"https://api.spoonacular.com/food/ingredients/{ingredient_id}/information?apiKey={spoonacular_api_key}&amount=1&unit=serving"
-                        detail_response = requests.get(detail_url, timeout=5)
-                        detail_data = detail_response.json()
-                        
-                        nutrition = detail_data.get('nutrition', {})
-                        nutrients = nutrition.get('nutrients', [])
-                        
-                        # Extract nutrition data
-                        nutrition_values = {}
-                        for nutrient in nutrients:
-                            name = nutrient.get('name', '').lower()
-                            amount = nutrient.get('amount', 0)
-                            
-                            if 'calorie' in name:
-                                nutrition_values['calories'] = amount
-                            elif 'protein' in name:
-                                nutrition_values['protein'] = amount
-                            elif 'fat' in name and 'saturated' not in name:
-                                nutrition_values['fat'] = amount
-                            elif 'carbohydrate' in name:
-                                nutrition_values['carbs'] = amount
-                            elif 'fiber' in name:
-                                nutrition_values['fiber'] = amount
-                            elif 'sugar' in name:
-                                nutrition_values['sugar'] = amount
-                            elif 'sodium' in name:
-                                nutrition_values['sodium'] = amount / 1000 if amount else 0  # Convert mg to g
-                        
-                        return {
-                            'name': ingredient.get('name', food_item),
-                            'calories': nutrition_values.get('calories', 0),
-                            'protein': nutrition_values.get('protein', 0),
-                            'fat': nutrition_values.get('fat', 0),
-                            'carbs': nutrition_values.get('carbs', 0),
-                            'fiber': nutrition_values.get('fiber', 0),
-                            'sugar': nutrition_values.get('sugar', 0),
-                            'sodium': nutrition_values.get('sodium', 0),
-                            'potassium': 0,
-                            'cholesterol': 0,
-                            'saturated_fat': 0,
-                            'calcium': 0,
-                            'iron': 0,
-                            'vitamin_a': 0,
-                            'vitamin_c': 0,
-                            'source': 'spoonacular'
-                        }
-    except Exception as e:
-        print(f"Spoonacular API error for '{food_item}': {e}")
-
-    # 4. Try Open Food Facts API (for branded items)
+    # 3. Try Open Food Facts API (simplified)
     try:
         search_query = food_item.replace(" ", "+")
-        openfoodfacts_url = f"https://world.openfoodfacts.org/cgi/search.pl?search_terms={search_query}&search_simple=1&action=process&json=1&page_size=1"
-        response = requests.get(openfoodfacts_url, timeout=5)
-        data = response.json()
+        openfoodfacts_url = f"https://world.openfoodfacts.org/cgi/search.pl?search_terms={search_query}&search_simple=1&action=process&json=1&page_size=3"
+        response = requests.get(openfoodfacts_url, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
 
-        if data.get('status') == 1 and 'products' in data and data['products']:
-            product = data['products'][0]
-            nutriments = product.get('nutriments', {})
-            
-            return {
-                'name': product.get('product_name', food_item),
-                'calories': nutriments.get('energy-kcal_100g', 0),
-                'protein': nutriments.get('proteins_100g', 0),
-                'fat': nutriments.get('fat_100g', 0),
-                'carbs': nutriments.get('carbohydrates_100g', 0),
-                'fiber': nutriments.get('fiber_100g', 0),
-                'sugar': nutriments.get('sugars_100g', 0),
-                'sodium': nutriments.get('sodium_100g', 0),
-                'potassium': nutriments.get('potassium_100g', 0),
-                'cholesterol': nutriments.get('cholesterol_100g', 0),
-                'saturated_fat': nutriments.get('saturated-fat_100g', 0),
-                'calcium': nutriments.get('calcium_100g', 0),
-                'iron': nutriments.get('iron_100g', 0),
-                'vitamin_a': nutriments.get('vitamin-a_100g', 0),
-                'vitamin_c': nutriments.get('vitamin-c_100g', 0),
-                'source': 'openfoodfacts'
-            }
+            if data.get('status') == 1 and 'products' in data and data['products']:
+                for product in data['products']:
+                    nutriments = product.get('nutriments', {})
+                    
+                    # Check if this product has meaningful nutrition data
+                    calories = nutriments.get('energy-kcal_100g', 0)
+                    if calories and calories > 0:
+                        return {
+                            'name': product.get('product_name', food_item),
+                            'calories': calories,
+                            'protein': nutriments.get('proteins_100g', 0),
+                            'fat': nutriments.get('fat_100g', 0),
+                            'carbs': nutriments.get('carbohydrates_100g', 0),
+                            'fiber': nutriments.get('fiber_100g', 0),
+                            'sugar': nutriments.get('sugars_100g', 0),
+                            'sodium': nutriments.get('sodium_100g', 0),
+                            'potassium': nutriments.get('potassium_100g', 0),
+                            'cholesterol': nutriments.get('cholesterol_100g', 0),
+                            'saturated_fat': nutriments.get('saturated-fat_100g', 0),
+                            'calcium': nutriments.get('calcium_100g', 0),
+                            'iron': nutriments.get('iron_100g', 0),
+                            'vitamin_a': nutriments.get('vitamin-a_100g', 0),
+                            'vitamin_c': nutriments.get('vitamin-c_100g', 0),
+                            'source': 'openfoodfacts'
+                        }
     except Exception as e:
         print(f"Open Food Facts API error for '{food_item}': {e}")
+
+    # 4. Generic fallback for common foods
+    generic_foods = {
+        'apple': {'name': 'Apple', 'calories': 52, 'protein': 0.3, 'fat': 0.2, 'carbs': 14, 'fiber': 2.4, 'sugar': 10.4, 'sodium': 1},
+        'banana': {'name': 'Banana', 'calories': 89, 'protein': 1.1, 'fat': 0.3, 'carbs': 23, 'fiber': 2.6, 'sugar': 12, 'sodium': 1},
+        'chicken breast': {'name': 'Chicken Breast', 'calories': 165, 'protein': 31, 'fat': 3.6, 'carbs': 0, 'fiber': 0, 'sugar': 0, 'sodium': 74},
+        'rice': {'name': 'White Rice', 'calories': 130, 'protein': 2.7, 'fat': 0.3, 'carbs': 28, 'fiber': 0.4, 'sugar': 0.1, 'sodium': 1},
+        'broccoli': {'name': 'Broccoli', 'calories': 34, 'protein': 2.8, 'fat': 0.4, 'carbs': 7, 'fiber': 2.6, 'sugar': 1.5, 'sodium': 33},
+        'salmon': {'name': 'Salmon', 'calories': 208, 'protein': 20, 'fat': 12, 'carbs': 0, 'fiber': 0, 'sugar': 0, 'sodium': 59},
+        'egg': {'name': 'Egg', 'calories': 155, 'protein': 13, 'fat': 11, 'carbs': 1.1, 'fiber': 0, 'sugar': 1.1, 'sodium': 124},
+        'bread': {'name': 'White Bread', 'calories': 265, 'protein': 9, 'fat': 3.2, 'carbs': 49, 'fiber': 2.7, 'sugar': 5, 'sodium': 477},
+        'milk': {'name': 'Milk', 'calories': 42, 'protein': 3.4, 'fat': 1, 'carbs': 5, 'fiber': 0, 'sugar': 5, 'sodium': 44},
+        'pasta': {'name': 'Pasta', 'calories': 131, 'protein': 5, 'fat': 1.1, 'carbs': 25, 'fiber': 1.8, 'sugar': 0.6, 'sodium': 1}
+    }
+    
+    # Check if it's a common food
+    food_lower = food_item.lower().strip()
+    for key, values in generic_foods.items():
+        if key in food_lower or food_lower in key:
+            generic_data = values.copy()
+            generic_data.update({
+                'potassium': 0,
+                'cholesterol': 0,
+                'saturated_fat': 0,
+                'calcium': 0,
+                'iron': 0,
+                'vitamin_a': 0,
+                'vitamin_c': 0,
+                'source': 'generic'
+            })
+            return generic_data
 
     return None  # Return None if no data found from any API
 
@@ -1410,25 +1311,12 @@ def explore_foods():
             error_message = "Please enter a food name."
         else:
             try:
-                response = requests.post(API_URL,
-                                         headers=HEADERS,
-                                         json={"query": food_query})
-                data = response.json()
-
-                if 'foods' in data and data['foods']:
-                    food = data['foods'][0]
-                    food_nutrition = {
-                        'name': food['food_name'],
-                        'calories': food['nf_calories'],
-                        'protein': food['nf_protein'],
-                        'fat': food['nf_total_fat'],
-                        'carbs': food['nf_total_carbohydrate'],
-                        'fiber': food.get('nf_dietary_fiber', 0),
-                        'sugar': food.get('nf_sugars', 0),
-                        'sodium': food.get('nf_sodium', 0)
-                    }
-                else:
-                    error_message = "Nutrition data not found for the provided food."
+                # Use the enhanced multi-API function
+                food_nutrition = get_nutrition_from_multiple_apis(food_query)
+                
+                if not food_nutrition:
+                    error_message = f"No nutrition data found for '{food_query}'. Try searching for a more specific food name (e.g., '1 cup rice' instead of 'rice')."
+                    
             except Exception as e:
                 error_message = f"Error fetching nutrition data: {str(e)}"
 
