@@ -1,7 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, make_response
 import sqlite3
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
+import hashlib
+import secrets
 from db_utils import get_db, close_db, execute, begin, commit, rollback
 
 app = Flask(__name__)
@@ -288,6 +290,17 @@ def init_db():
         )
     ''')
 
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS remember_tokens (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            token_hash TEXT,
+            expires_at TEXT,
+            created_at TEXT,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+
     # Add columns if they don't exist (for existing databases)
     try:
         c.execute('ALTER TABLE meals ADD COLUMN quantity REAL')
@@ -327,9 +340,79 @@ def init_db():
 init_db()
 
 
+# ---------- REMEMBER ME HELPER FUNCTIONS ----------
+def create_remember_token(user_id):
+    """Create a secure remember token for the user"""
+    token = secrets.token_urlsafe(32)
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    expires_at = (datetime.now() + timedelta(days=30)).isoformat()
+    
+    conn = sqlite3.connect('cedhealth.db')
+    c = conn.cursor()
+    
+    # Clean up old tokens for this user
+    c.execute('DELETE FROM remember_tokens WHERE user_id = ?', (user_id,))
+    
+    # Insert new token
+    c.execute('''
+        INSERT INTO remember_tokens (user_id, token_hash, expires_at, created_at)
+        VALUES (?, ?, ?, ?)
+    ''', (user_id, token_hash, expires_at, datetime.now().isoformat()))
+    
+    conn.commit()
+    conn.close()
+    
+    return token
+
+def verify_remember_token(token):
+    """Verify a remember token and return user_id if valid"""
+    if not token:
+        return None
+        
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    
+    conn = sqlite3.connect('cedhealth.db')
+    c = conn.cursor()
+    
+    c.execute('''
+        SELECT rt.user_id, u.username 
+        FROM remember_tokens rt
+        JOIN users u ON rt.user_id = u.id
+        WHERE rt.token_hash = ? AND rt.expires_at > ?
+    ''', (token_hash, datetime.now().isoformat()))
+    
+    result = c.fetchone()
+    conn.close()
+    
+    return result
+
+def clear_remember_token(token):
+    """Clear a remember token from the database"""
+    if not token:
+        return
+        
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    
+    conn = sqlite3.connect('cedhealth.db')
+    c = conn.cursor()
+    c.execute('DELETE FROM remember_tokens WHERE token_hash = ?', (token_hash,))
+    conn.commit()
+    conn.close()
+
+
 # ---------- ROUTES ----------
 @app.route('/')
 def home():
+    # Check if user has a remember me token
+    remember_token = request.cookies.get('remember_token')
+    if remember_token:
+        user_data = verify_remember_token(remember_token)
+        if user_data:
+            user_id, username = user_data
+            session['user_id'] = user_id
+            session['username'] = username
+            return redirect(url_for('dashboard'))
+    
     return redirect(url_for('login'))
 
 
@@ -343,9 +426,23 @@ def service_worker():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
+    
+    # Check if user already has a valid remember me token
+    if 'user_id' not in session:
+        remember_token = request.cookies.get('remember_token')
+        if remember_token:
+            user_data = verify_remember_token(remember_token)
+            if user_data:
+                user_id, username = user_data
+                session['user_id'] = user_id
+                session['username'] = username
+                return redirect(url_for('dashboard'))
+    
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        remember_me = request.form.get('remember_me') == 'on'
+        
         conn = sqlite3.connect('cedhealth.db')
         c = conn.cursor()
         c.execute('SELECT id FROM users WHERE username = ? AND password = ?',
@@ -362,10 +459,25 @@ def login():
 
             conn.close()
 
+            # Create response object
             if not initial_goals_complete:
-                return redirect(url_for('initial_goals'))
+                response = make_response(redirect(url_for('initial_goals')))
             else:
-                return redirect(url_for('dashboard'))
+                response = make_response(redirect(url_for('dashboard')))
+            
+            # Set remember me cookie if requested
+            if remember_me:
+                token = create_remember_token(user[0])
+                response.set_cookie(
+                    'remember_token', 
+                    token, 
+                    max_age=30*24*60*60,  # 30 days
+                    secure=True,
+                    httponly=True,
+                    samesite='Lax'
+                )
+            
+            return response
         else:
             error = 'Invalid username or password'
             conn.close()
@@ -653,8 +765,15 @@ def dashboard():
 
 @app.route('/logout')
 def logout():
+    # Clear remember me token if it exists
+    remember_token = request.cookies.get('remember_token')
+    if remember_token:
+        clear_remember_token(remember_token)
+    
     session.clear()
-    return redirect(url_for('login'))
+    response = make_response(redirect(url_for('login')))
+    response.set_cookie('remember_token', '', expires=0)
+    return response
 
 
 @app.route('/goals', methods=['GET', 'POST'])
