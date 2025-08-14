@@ -1,0 +1,254 @@
+Act as a senior Flask developer. Update my CedHealth Flask app (Flask + SQLite, templates in /templates, static in /static) to add these Quick Add features:
+
+Scope
+
+Meal Notes (text notes + mood + hunger level per meal)
+
+Favorites / Quick Add (save a meal as a favorite; re-log it in 1 click)
+
+Portion Size Shortcuts (½x, 1x, 2x multipliers applied to nutrition)
+
+Meal Photos (upload + thumbnail display)
+
+Use clean, commented code. Back up existing files if needed. Keep existing routes and Nutritionix logic intact.
+
+1) Database migrations (SQLite)
+
+Create a safe migration that won’t crash if columns/tables already exist.
+
+Add columns to meals:
+
+notes TEXT DEFAULT ''
+
+mood TEXT DEFAULT '' -- e.g., "happy", "stressed", "tired"
+
+hunger INTEGER DEFAULT 3 -- 1–5 scale
+
+photo_path TEXT DEFAULT ''
+
+portion_multiplier REAL DEFAULT 1.0
+
+Create table favorite_meals for user-specific favorites:
+
+CREATE TABLE IF NOT EXISTS favorite_meals (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  label TEXT NOT NULL,
+  ingredients_json TEXT NOT NULL,        -- JSON of ingredient list / parsed API input
+  total_nutrition_json TEXT NOT NULL,    -- JSON of nutrition totals for quick re-log
+  default_multiplier REAL DEFAULT 1.0,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, label)
+);
+
+
+Add helpful indexes:
+
+CREATE INDEX IF NOT EXISTS idx_fav_user ON favorite_meals(user_id);
+
+
+Implement a Python init_migrations() function that:
+
+Inspects PRAGMA table_info(meals) to conditionally ALTER TABLE only missing columns
+
+Creates favorite_meals if missing
+
+Call init_migrations() during app startup after init_db().
+
+2) App config for uploads (Meal Photos)
+
+In cedhealth_app.py:
+
+Add:
+
+import os
+from werkzeug.utils import secure_filename
+
+app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
+app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024  # 8MB
+ALLOWED_EXTENSIONS = {'png','jpg','jpeg','webp'}
+
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+Helper to save an image:
+
+def save_meal_photo(file):
+    if not file or file.filename == '':
+        return ''
+    if allowed_file(file.filename):
+        fname = secure_filename(file.filename)
+        path = os.path.join(app.config['UPLOAD_FOLDER'], fname)
+        # avoid collisions
+        base, ext = os.path.splitext(fname)
+        i = 1
+        while os.path.exists(path):
+            fname = f"{base}_{i}{ext}"
+            path = os.path.join(app.config['UPLOAD_FOLDER'], fname)
+            i += 1
+        file.save(path)
+        return f"/{path.replace(os.sep, '/')}"
+    return ''
+
+3) Update meal creation / analyzer routes
+
+Wherever we process a new meal (e.g., /meal_analyzer POST or /meals/add), accept these new form fields:
+
+notes (textarea)
+
+mood (select)
+
+hunger (1–5)
+
+portion_multiplier (float; default 1.0)
+
+photo (file input)
+
+When computing nutrition totals from the API result, multiply calories, protein, fat, carbs by portion_multiplier. Store the portion_multiplier on the meal row.
+
+Save photo via save_meal_photo(request.files.get('photo')) and store photo_path.
+
+Validate user ownership (use session['user_id']).
+
+4) Favorites / Quick Add routes
+
+Add these routes:
+
+POST /favorites/toggle
+Body: label, ingredients_json, total_nutrition_json, default_multiplier
+Behavior:
+
+If a favorite with (user_id, label) exists: delete it (unfavorite).
+
+Else: insert it (favorite).
+
+Return JSON { "favorited": true/false }.
+
+GET /favorites
+Shows list of favorites for the logged-in user, with a “Quick Add” button for each (½x, 1x, 2x buttons).
+
+POST /favorites/quick_add/<fav_id>
+Form field: multiplier (0.5, 1, 2).
+Behavior:
+
+Load favorite_meals by fav_id (verify ownership).
+
+Parse total_nutrition_json, multiply by multiplier.
+
+Create a new meals row for today using the scaled nutrition.
+
+Optionally copy ingredients_json into a notes suffix like “(Quick Add from Favorite: …)”.
+
+Redirect back to dashboard/meals list with a flash message.
+
+Return proper errors for unauthenticated access.
+
+5) Templates: Add form controls + UI
+
+Update the meal add/analyze template(s) (likely analyze_meal.html and/or add_meal.html):
+
+Meal Notes
+
+<label for="notes">Notes</label>
+<textarea id="notes" name="notes" placeholder="e.g., ate after workout, felt great"></textarea>
+
+
+Mood & Hunger
+
+<label for="mood">Mood</label>
+<select id="mood" name="mood">
+  <option value="">—</option>
+  <option>happy</option>
+  <option>neutral</option>
+  <option>stressed</option>
+  <option>tired</option>
+</select>
+
+<label for="hunger">Hunger (1–5)</label>
+<input type="number" id="hunger" name="hunger" min="1" max="5" value="3">
+
+
+Portion Size Shortcuts (set hidden portion_multiplier)
+
+<input type="hidden" id="portion_multiplier" name="portion_multiplier" value="1">
+<div class="portion-buttons">
+  <button type="button" data-mul="0.5">½x</button>
+  <button type="button" data-mul="1">1x</button>
+  <button type="button" data-mul="2">2x</button>
+</div>
+<script>
+  document.querySelectorAll('.portion-buttons button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.getElementById('portion_multiplier').value = btn.dataset.mul;
+    });
+  });
+</script>
+
+
+Photo Upload + Preview
+
+<label for="photo">Meal Photo</label>
+<input type="file" id="photo" name="photo" accept="image/*">
+<img id="photoPreview" style="max-width:120px; display:none;">
+<script>
+  const input = document.getElementById('photo');
+  const preview = document.getElementById('photoPreview');
+  input.addEventListener('change', (e)=>{
+    const f = e.target.files[0];
+    if(!f) return;
+    const url = URL.createObjectURL(f);
+    preview.src = url;
+    preview.style.display = 'block';
+  });
+</script>
+
+
+Ensure the form tag includes enctype="multipart/form-data".
+
+Favorite Star (on the analyzer result page where nutrition is shown)
+Show a star icon/button. On click, fetch('/favorites/toggle', {method:'POST', body:FormData(...)}) with label (meal title), ingredients_json (stringified ingredients you used to call the API), and total_nutrition_json (stringified nutrition totals before scaling, or after, as long as we use it consistently). Update UI to filled/unfilled star.
+
+Meals list (meals.html)
+
+Show note icon if notes exists (tooltip shows contents).
+
+Show mood/hunger (emoji like 🙂 😐 😫 or “Mood: X, Hunger: Y”).
+
+If photo_path exists, show 80–120px thumbnail.
+
+Display portion_multiplier if not 1.0 (e.g., “x0.5,” “x2”).
+
+Favorites page (favorites.html)
+
+List each favorite with label and created_at.
+
+Buttons “Quick Add ½x”, “Quick Add 1x”, “Quick Add 2x” posting to /favorites/quick_add/<id>.
+
+Add minimal CSS in /static/style.css for .portion-buttons button, star button states, and thumbnails.
+
+6) Security & validation
+
+Only allow access to these routes if session['user_id'] exists; otherwise redirect to login.
+
+Sanitize file names via secure_filename.
+
+Limit image types to png/jpg/jpeg/webp.
+
+Handle bad input with flash() messages.
+
+7) QA checklist (implement and verify)
+
+Create a meal with notes, mood, hunger, and photo; confirm stored correctly and visible in meals list.
+
+Click ½x/1x/2x and confirm nutrition scales and is saved as portion_multiplier.
+
+Favorite a meal and see it appear under /favorites.
+
+Quick Add from favorites with each multiplier; verify new rows create with scaled totals.
+
+Try unfavorite (toggle) and confirm it’s removed.
+
+Make all changes and provide the updated Python, HTML, and CSS files. Explain where code was inserted, and include the migration logic in cedhealth_app.py.
