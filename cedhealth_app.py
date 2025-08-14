@@ -682,6 +682,37 @@ def goals():
     return render_template('goals.html', goal=goal)
 
 
+@app.route('/get_nutrition_data', methods=['POST'])
+def get_nutrition_data():
+    if 'user_id' not in session:
+        return {'error': 'Not authenticated', 'success': False}, 401
+
+    data = request.get_json()
+    food_query = data.get('food_query', '').strip()
+    
+    if not food_query:
+        return {'error': 'Please provide a food name', 'success': False}
+
+    try:
+        nutrition_data = get_nutrition_from_multiple_apis(food_query)
+        
+        if nutrition_data:
+            return {
+                'success': True,
+                'nutrition': nutrition_data
+            }
+        else:
+            return {
+                'success': False,
+                'error': f"No nutrition data found for '{food_query}'. Try being more specific (e.g., '1 cup rice' instead of 'rice')."
+            }
+    except Exception as e:
+        return {
+            'success': False,
+            'error': f"Error getting nutrition data: {str(e)}"
+        }
+
+
 @app.route('/search_foods')
 def search_foods():
     if 'user_id' not in session:
@@ -919,18 +950,16 @@ def meals():
         if quantity and unit and food_name:
             meal_query = f"{quantity} {unit} {food_name}"
             try:
-                response = requests.post(API_URL,
-                                         headers=HEADERS,
-                                         json={"query": meal_query})
-                data = response.json()
-                if 'foods' in data:
-                    food = data['foods'][0]
+                # Use the enhanced multi-API function
+                nutrition_result = get_nutrition_from_multiple_apis(meal_query)
+                
+                if nutrition_result:
                     nutrition_data = {
-                        'name': food['food_name'],
-                        'calories': food['nf_calories'],
-                        'protein': food['nf_protein'],
-                        'fat': food['nf_total_fat'],
-                        'carbs': food['nf_total_carbohydrate']
+                        'name': nutrition_result['name'],
+                        'calories': nutrition_result['calories'],
+                        'protein': nutrition_result['protein'],
+                        'fat': nutrition_result['fat'],
+                        'carbs': nutrition_result['carbs']
                     }
 
                     conn = sqlite3.connect('cedhealth.db')
@@ -952,6 +981,41 @@ def meals():
                 error_message = str(e)
         else:
             error_message = "Please enter quantity, unit, and food name."
+    
+    # Handle adding nutrition meal directly
+    elif request.method == 'POST' and request.form.get('action') == 'add_nutrition_meal':
+        food_name = request.form.get('food_name')
+        calories = request.form.get('calories', type=float)
+        protein = request.form.get('protein', type=float)
+        fat = request.form.get('fat', type=float)
+        carbs = request.form.get('carbs', type=float)
+
+        if food_name and calories is not None:
+            try:
+                conn = sqlite3.connect('cedhealth.db')
+                c = conn.cursor()
+                c.execute(
+                    '''
+                    INSERT INTO meals (user_id, meal_name, calories, protein, fat, carbs, date)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ''',
+                    (session['user_id'], food_name, calories, protein or 0, fat or 0, carbs or 0,
+                     datetime.now().date().isoformat()))
+                conn.commit()
+                conn.close()
+                
+                # Set nutrition_data for display
+                nutrition_data = {
+                    'name': food_name,
+                    'calories': calories,
+                    'protein': protein or 0,
+                    'fat': fat or 0,
+                    'carbs': carbs or 0
+                }
+            except Exception as e:
+                error_message = f"Error adding meal: {str(e)}"
+        else:
+            error_message = "Invalid nutrition data."
 
     # Handle meal analysis
     elif request.method == 'POST' and request.form.get('action') == 'analyze_meal':

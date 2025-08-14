@@ -866,29 +866,63 @@
 
             nutritionResults.innerHTML = '<div style="text-align: center; color: #3b82f6; padding: 20px;">🔍 Getting nutrition information...</div>';
 
-            const formData = new FormData();
-            formData.append('food_query', foodName);
-            formData.append('action', 'lookup_food');
-
-            fetch('/explore_foods', {
+            // Call the new endpoint directly for nutrition data
+            fetch('/get_nutrition_data', {
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ food_query: foodName })
             })
-            .then(response => response.text())
-            .then(html => {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                const nutritionCard = doc.querySelector('.nutrition-card');
-
-                if (nutritionCard) {
-                    nutritionResults.innerHTML = nutritionCard.outerHTML + `
-                        <div style="text-align: center; margin-top: 20px;">
-                            <button class="btn" onclick="addFoodToMeals('${foodName}')">Add to Today's Meals</button>
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.nutrition) {
+                    const nutrition = data.nutrition;
+                    nutritionResults.innerHTML = `
+                        <div class="nutrition-card">
+                            <h3>Nutrition Information</h3>
+                            <div class="nutrition-name">${nutrition.name}</div>
+                            <div class="nutrition-grid">
+                                <div class="nutrition-item">
+                                    <div class="nutrition-value">${Math.round(nutrition.calories)}</div>
+                                    <div class="nutrition-label">Calories</div>
+                                </div>
+                                <div class="nutrition-item">
+                                    <div class="nutrition-value">${nutrition.protein.toFixed(1)}g</div>
+                                    <div class="nutrition-label">Protein</div>
+                                </div>
+                                <div class="nutrition-item">
+                                    <div class="nutrition-value">${nutrition.fat.toFixed(1)}g</div>
+                                    <div class="nutrition-label">Fat</div>
+                                </div>
+                                <div class="nutrition-item">
+                                    <div class="nutrition-value">${nutrition.carbs.toFixed(1)}g</div>
+                                    <div class="nutrition-label">Carbs</div>
+                                </div>
+                                <div class="nutrition-item">
+                                    <div class="nutrition-value">${nutrition.fiber.toFixed(1)}g</div>
+                                    <div class="nutrition-label">Fiber</div>
+                                </div>
+                                <div class="nutrition-item">
+                                    <div class="nutrition-value">${nutrition.sugar.toFixed(1)}g</div>
+                                    <div class="nutrition-label">Sugar</div>
+                                </div>
+                                <div class="nutrition-item">
+                                    <div class="nutrition-value">${Math.round(nutrition.sodium)}mg</div>
+                                    <div class="nutrition-label">Sodium</div>
+                                </div>
+                            </div>
+                            <div style="text-align: center; margin-top: 20px;">
+                                <button class="btn" onclick="addFoodToMeals('${foodName}', ${JSON.stringify(nutrition).replace(/"/g, '&quot;')})">Add to Today's Meals</button>
+                            </div>
+                            <p style="text-align: center; color: #64748b; font-size: 0.85rem; margin-top: 10px;">
+                                Data source: ${nutrition.source || 'Multiple APIs'}
+                            </p>
                         </div>
                     `;
                     nutritionResults.scrollIntoView({ behavior: 'smooth' });
                 } else {
-                    nutritionResults.innerHTML = '<div style="color: #f59e0b; padding: 20px; text-align: center;">⚠️ No nutrition data found for this food.</div>';
+                    nutritionResults.innerHTML = `<div style="color: #f59e0b; padding: 20px; text-align: center;">⚠️ ${data.error || 'No nutrition data found for this food.'}</div>`;
                 }
             })
             .catch(error => {
@@ -901,26 +935,52 @@
             });
         }
 
-        function addFoodToMeals(foodName) {
-            // Pre-fill the manual entry form
-            const manualFoodNameInput = document.querySelector('input[name="food_name"]');
-            const quantityInput = document.querySelector('input[name="quantity"]');
-            const unitInput = document.querySelector('input[name="unit"]');
+        function addFoodToMeals(foodName, nutritionData) {
+            if (nutritionData) {
+                // Add the food directly using the nutrition data
+                const formData = new FormData();
+                formData.append('action', 'add_nutrition_meal');
+                formData.append('food_name', nutritionData.name);
+                formData.append('calories', nutritionData.calories);
+                formData.append('protein', nutritionData.protein);
+                formData.append('fat', nutritionData.fat);
+                formData.append('carbs', nutritionData.carbs);
 
-            if (manualFoodNameInput) {
-                manualFoodNameInput.value = foodName;
-                quantityInput.value = '1';
-                unitInput.value = 'serving';
+                fetch('/meals', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.text())
+                .then(() => {
+                    // Show success message and reload
+                    alert(`${nutritionData.name} added to today's meals!`);
+                    window.location.reload();
+                })
+                .catch(error => {
+                    console.error('Error adding meal:', error);
+                    alert('Error adding meal. Please try again.');
+                });
+            } else {
+                // Pre-fill the manual entry form
+                const manualFoodNameInput = document.querySelector('input[name="food_name"]');
+                const quantityInput = document.querySelector('input[name="quantity"]');
+                const unitInput = document.querySelector('input[name="unit"]');
 
-                // Highlight the form briefly
-                const form = document.querySelector('form');
-                form.style.background = '#dcfce7';
-                form.style.borderRadius = '12px';
-                form.style.padding = '20px';
-                setTimeout(() => {
-                    form.style.background = '';
-                    form.style.padding = '';
-                }, 2000);
+                if (manualFoodNameInput) {
+                    manualFoodNameInput.value = foodName;
+                    quantityInput.value = '1';
+                    unitInput.value = 'serving';
+
+                    // Highlight the form briefly
+                    const form = document.querySelector('form');
+                    form.style.background = '#dcfce7';
+                    form.style.borderRadius = '12px';
+                    form.style.padding = '20px';
+                    setTimeout(() => {
+                        form.style.background = '';
+                        form.style.padding = '';
+                    }, 2000);
+                }
             }
         }
 
