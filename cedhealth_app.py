@@ -941,8 +941,31 @@ def meals():
     analyze_results = []
     total_nutrition = {'calories': 0, 'protein': 0, 'fat': 0, 'carbs': 0, 'fiber': 0}
 
+    # Handle editing existing meal
+    if request.method == 'POST' and request.form.get('action') == 'edit_meal':
+        meal_id = request.form.get('meal_id')
+        meal_name = request.form.get('meal_name')
+        calories = request.form.get('calories', type=float)
+        protein = request.form.get('protein', type=float)
+        fat = request.form.get('fat', type=float)
+        carbs = request.form.get('carbs', type=float)
+
+        if meal_id and meal_name and calories is not None:
+            try:
+                conn = sqlite3.connect('cedhealth.db')
+                c = conn.cursor()
+                c.execute('''
+                    UPDATE meals 
+                    SET meal_name = ?, calories = ?, protein = ?, fat = ?, carbs = ? 
+                    WHERE id = ? AND user_id = ?
+                ''', (meal_name, calories, protein or 0, fat or 0, carbs or 0, meal_id, session['user_id']))
+                conn.commit()
+                conn.close()
+            except Exception as e:
+                error_message = f"Error updating meal: {str(e)}"
+
     # Handle adding new meal
-    if request.method == 'POST' and request.form.get('action') == 'add_meal':
+    elif request.method == 'POST' and request.form.get('action') == 'add_meal':
         quantity = request.form.get('quantity')
         unit = request.form.get('unit')
         food_name = request.form.get('food_name')
