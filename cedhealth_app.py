@@ -17,6 +17,56 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
+# Helper function to get nutrition data from multiple APIs
+def get_nutrition_from_multiple_apis(food_item):
+    """
+    Queries multiple food nutrition APIs (Nutritionix, Open Food Facts)
+    and returns the first successful result.
+    """
+    # 1. Try Nutritionix API
+    try:
+        response = requests.post(API_URL, headers=HEADERS, json={"query": food_item})
+        data = response.json()
+        if 'foods' in data and data['foods']:
+            food = data['foods'][0]
+            return {
+                'name': food['food_name'],
+                'calories': food['nf_calories'],
+                'protein': food['nf_protein'],
+                'fat': food['nf_total_fat'],
+                'carbs': food['nf_total_carbohydrate'],
+                'fiber': food.get('nf_dietary_fiber', 0)
+            }
+    except Exception as e:
+        print(f"Nutritionix API error for '{food_item}': {e}")
+
+    # 2. Try Open Food Facts API (for general food items if Nutritionix fails or is limited)
+    # Note: Open Food Facts might require different parameters or parsing depending on the query
+    try:
+        search_query = food_item.replace(" ", "+")
+        openfoodfacts_url = f"https://world.openfoodfacts.org/cgi/search.pl?search_terms={search_query}&search_simple=1&action=process&json=1&page_size=1"
+        response = requests.get(openfoodfacts_url, timeout=3)
+        data = response.json()
+
+        if data.get('status') == 1 and 'products' in data and data['products']:
+            product = data['products'][0]
+            # Extract nutrition info, assuming per 100g
+            nutriments = product.get('nutriments', {})
+            return {
+                'name': product.get('product_name', food_item),
+                'calories': nutriments.get('energy-kcal_100g', 0),
+                'protein': nutriments.get('proteins_100g', 0),
+                'fat': nutriments.get('fat_100g', 0),
+                'carbs': nutriments.get('carbohydrates_100g', 0),
+                'fiber': nutriments.get('fiber_100g', 0)
+            }
+    except Exception as e:
+        print(f"Open Food Facts API error for '{food_item}': {e}")
+    
+    # Add more API integrations here if needed (e.g., Edamam, USDA FoodData Central)
+
+    return None # Return None if no data found
+
 
 # ---------- DATABASE SETUP ----------
 def init_db():
@@ -57,7 +107,7 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     ''')
-    
+
     c.execute('''
         CREATE TABLE IF NOT EXISTS weight_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -67,7 +117,7 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     ''')
-    
+
     c.execute('''
         CREATE TABLE IF NOT EXISTS daily_weights (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -77,7 +127,7 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     ''')
-    
+
     c.execute('''
         CREATE TABLE IF NOT EXISTS saved_meals (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -87,7 +137,7 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     ''')
-    
+
     c.execute('''
         CREATE TABLE IF NOT EXISTS saved_meal_items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -101,7 +151,7 @@ def init_db():
             FOREIGN KEY (saved_meal_id) REFERENCES saved_meals(id)
         )
     ''')
-    
+
     c.execute('''
         CREATE TABLE IF NOT EXISTS initial_goals (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -125,39 +175,39 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     ''')
-    
+
     # Add columns if they don't exist (for existing databases)
     try:
         c.execute('ALTER TABLE meals ADD COLUMN quantity REAL')
     except sqlite3.OperationalError:
         pass  # Column already exists
-    
+
     try:
         c.execute('ALTER TABLE meals ADD COLUMN unit TEXT')
     except sqlite3.OperationalError:
         pass  # Column already exists
-    
+
     try:
         c.execute('ALTER TABLE meals ADD COLUMN meal_session_id TEXT')
     except sqlite3.OperationalError:
         pass  # Column already exists
-    
+
     # Add macronutrient goal columns if they don't exist
     try:
         c.execute('ALTER TABLE goals ADD COLUMN protein_goal REAL')
     except sqlite3.OperationalError:
         pass  # Column already exists
-    
+
     try:
         c.execute('ALTER TABLE goals ADD COLUMN carbs_goal REAL')
     except sqlite3.OperationalError:
         pass  # Column already exists
-    
+
     try:
         c.execute('ALTER TABLE goals ADD COLUMN fat_goal REAL')
     except sqlite3.OperationalError:
         pass  # Column already exists
-    
+
     conn.commit()
     conn.close()
 
@@ -189,17 +239,17 @@ def login():
         c.execute('SELECT id FROM users WHERE username = ? AND password = ?',
                   (username, password))
         user = c.fetchone()
-        
+
         if user:
             session['user_id'] = user[0]
             session['username'] = username
-            
+
             # Check if user has completed initial goals setup
             c.execute('SELECT id FROM initial_goals WHERE user_id = ?', (user[0],))
             initial_goals_complete = c.fetchone()
-            
+
             conn.close()
-            
+
             if not initial_goals_complete:
                 return redirect(url_for('initial_goals'))
             else:
@@ -222,7 +272,7 @@ def signup():
                            (username, password))
             user_id = result.lastrowid
             commit()
-            
+
             # Auto-login and redirect to initial goals
             session['user_id'] = user_id
             session['username'] = username
@@ -240,12 +290,12 @@ def signup():
 def initial_goals():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
     error = None
-    
+
     if request.method == 'POST':
         user_id = session['user_id']
-        
+
         # Get form data
         weight = request.form.get('weight', type=float)
         weight_unit = request.form.get('weight_unit')
@@ -258,14 +308,14 @@ def initial_goals():
         goal_type = request.form.get('goal_type')
         current_workout_frequency = request.form.get('current_workout_frequency', type=int)
         desired_workout_frequency = request.form.get('desired_workout_frequency', type=int)
-        
+
         # Get multi-select values
         workout_types = request.form.getlist('workout_types')
         diet_preferences = request.form.getlist('diet_preferences')
         tracking_preferences = request.form.getlist('tracking_preferences')
-        
+
         motivation = request.form.get('motivation')
-        
+
         # Basic validation
         if not weight or not goal_type or current_workout_frequency is None or desired_workout_frequency is None:
             error = 'Please fill in all required fields.'
@@ -273,7 +323,7 @@ def initial_goals():
             try:
                 conn = sqlite3.connect('cedhealth.db')
                 c = conn.cursor()
-                
+
                 # Save initial goals
                 c.execute('''
                     INSERT INTO initial_goals (
@@ -291,11 +341,11 @@ def initial_goals():
                     motivation, ','.join(tracking_preferences),
                     datetime.now().date().isoformat()
                 ))
-                
+
                 # Calculate basic calorie and macro goals based on the input
                 # This is a simplified calculation - you can make it more sophisticated
                 base_calories = 2000  # Default starting point
-                
+
                 if goal_type == 'lose_weight':
                     calorie_goal = base_calories - 300
                     protein_goal = weight * 2.2 if weight_unit == 'kg' else weight * 1.0
@@ -305,11 +355,11 @@ def initial_goals():
                 else:  # maintain
                     calorie_goal = base_calories
                     protein_goal = weight * 2.0 if weight_unit == 'kg' else weight * 0.9
-                
+
                 # Set basic macro goals
                 carbs_goal = calorie_goal * 0.4 / 4  # 40% of calories from carbs
                 fat_goal = calorie_goal * 0.3 / 9    # 30% of calories from fat
-                
+
                 # Save to goals table
                 c.execute('''
                     INSERT OR REPLACE INTO goals (
@@ -319,15 +369,15 @@ def initial_goals():
                     user_id, target_weight or weight, int(calorie_goal), 
                     round(protein_goal, 1), round(carbs_goal, 1), round(fat_goal, 1)
                 ))
-                
+
                 conn.commit()
                 conn.close()
-                
+
                 return redirect(url_for('dashboard'))
-                
+
             except Exception as e:
                 error = f'Error saving goals: {str(e)}'
-    
+
     return render_template('initial_goals.html', username=session['username'], error=error)
 
 
@@ -343,14 +393,14 @@ def dashboard():
     # Get user's goals
     c.execute('SELECT weight_goal, calorie_goal, protein_goal, carbs_goal, fat_goal FROM goals WHERE user_id = ?', (user_id,))
     goal = c.fetchone()
-    
+
     # Default values if no goals set
     weight_goal = goal[0] if goal else None
     calorie_goal = goal[1] if goal else 2000
     protein_goal = goal[2] if goal else 150
     carbs_goal = goal[3] if goal else 250
     fat_goal = goal[4] if goal else 65
-    
+
     # Calculate fiber goal based on calorie goal (14g per 1000 calories)
     fiber_goal = round((calorie_goal / 1000) * 14, 1)
 
@@ -382,17 +432,17 @@ def dashboard():
         FROM meals 
         WHERE user_id = ? AND date = ?
     ''', (user_id, today))
-    
+
     nutrition_totals = c.fetchone()
     current_protein = nutrition_totals[0] if nutrition_totals[0] else 0
     current_fat = nutrition_totals[1] if nutrition_totals[1] else 0
     current_carbs = nutrition_totals[2] if nutrition_totals[2] else 0
-    
+
     # Get today's weight if logged
     c.execute('SELECT weight FROM daily_weights WHERE user_id = ? AND date = ?', (user_id, today))
     today_weight = c.fetchone()
     today_weight = today_weight[0] if today_weight else None
-    
+
     # Calculate fiber (approximate: 3g per 100g carbs)
     current_fiber = round((current_carbs / 100) * 3, 1)
 
@@ -407,10 +457,10 @@ def dashboard():
     try:
         url = "https://api.spoonacular.com/recipes/random?number=1"
         headers = {"x-api-key": "669ab752fed34d5ea3f9b188b1983b8b"}
-        
+
         response = requests.get(url, headers=headers)
         data = response.json()
-        
+
         if 'recipes' in data and data['recipes']:
             recipe = data['recipes'][0]
             from bs4 import BeautifulSoup
@@ -418,7 +468,7 @@ def dashboard():
             if summary:
                 soup = BeautifulSoup(summary, 'html.parser')
                 summary = soup.get_text()
-            
+
             recipe_data = {
                 'title': recipe.get('title', 'Unknown Recipe'),
                 'image': recipe.get('image', ''),
@@ -439,11 +489,11 @@ def dashboard():
         LIMIT 1
     ''', (user_id,))
     user_data = c.fetchone()
-    
+
     if user_data:
         weight, weight_unit, goal_type, target_weight = user_data
         weight_lbs = weight * 2.20462 if weight_unit == 'kg' else weight
-        
+
         if goal_type == 'gain_weight':
             calories_per_lb = 19
             protein_per_lb = 1.0
@@ -453,10 +503,10 @@ def dashboard():
         else:
             calories_per_lb = 15.5
             protein_per_lb = 1.0
-        
+
         target_calories = int(weight_lbs * calories_per_lb)
         target_protein = int(weight_lbs * protein_per_lb)
-        
+
         diet_summary = {
             'goal_type': goal_type,
             'target_calories': target_calories,
@@ -524,24 +574,24 @@ def goals():
 def search_foods():
     if 'user_id' not in session:
         return {'error': 'Not authenticated'}, 401
-    
+
     query = request.args.get('q', '').strip()
     if not query:
         return {'common': [], 'branded': []}
-    
+
     try:
         # Try Nutritionix first
         response = requests.get(SEARCH_URL, 
                                headers=HEADERS, 
                                params={'query': query})
         data = response.json()
-        
+
         # Format the response for frontend
         result = {
             'common': [],
             'branded': []
         }
-        
+
         if 'common' in data:
             for item in data['common'][:5]:  # Limit to 5 items
                 result['common'].append({
@@ -550,7 +600,7 @@ def search_foods():
                     'photo': item.get('photo', {}).get('thumb', ''),
                     'source': 'nutritionix'
                 })
-        
+
         if 'branded' in data:
             for item in data['branded'][:5]:  # Limit to 5 items
                 result['branded'].append({
@@ -559,7 +609,7 @@ def search_foods():
                     'photo': item.get('photo', {}).get('thumb', ''),
                     'source': 'nutritionix'
                 })
-        
+
         # If Nutritionix returns no branded results, try Open Food Facts as fallback
         if not result['branded'] and len(result['common']) < 3:
             try:
@@ -567,7 +617,7 @@ def search_foods():
                 openfoodfacts_url = f"https://world.openfoodfacts.org/cgi/search.pl?search_terms={query}&search_simple=1&action=process&json=1&page_size=5"
                 openfoodfacts_response = requests.get(openfoodfacts_url, timeout=3)
                 openfoodfacts_data = openfoodfacts_response.json()
-                
+
                 if 'products' in openfoodfacts_data:
                     for product in openfoodfacts_data['products'][:3]:  # Limit to 3 items
                         if product.get('product_name') and product.get('brands'):
@@ -579,7 +629,7 @@ def search_foods():
                             })
             except:
                 pass  # Ignore Open Food Facts errors, just use Nutritionix results
-        
+
         return result
     except Exception as e:
         return {'error': str(e)}, 500
@@ -604,38 +654,27 @@ def analyze_meal():
                 break
             food_items.append(food_item.strip())
             i += 1
-        
+
         if food_items:
             # Create a combined query for all items
             combined_query = ', '.join(food_items)
-            
+
             try:
-                response = requests.post(API_URL,
-                                         headers=HEADERS,
-                                         json={"query": combined_query})
-                data = response.json()
-                
-                if 'foods' in data and data['foods']:
-                    conn = sqlite3.connect('cedhealth.db')
-                    c = conn.cursor()
-                    current_date = datetime.now().date().isoformat()
-                    
-                    # Generate a unique meal session ID
-                    import uuid
-                    meal_session_id = str(uuid.uuid4())
-                    
-                    for food in data['foods']:
-                        food_nutrition = {
-                            'name': food['food_name'],
-                            'calories': food['nf_calories'],
-                            'protein': food['nf_protein'],
-                            'fat': food['nf_total_fat'],
-                            'carbs': food['nf_total_carbohydrate'],
-                            'fiber': food.get('nf_dietary_fiber', 0)
-                        }
-                        
+                # Try to get nutrition data for each food item using multiple APIs
+                conn = sqlite3.connect('cedhealth.db')
+                c = conn.cursor()
+                current_date = datetime.now().date().isoformat()
+
+                # Generate a unique meal session ID
+                import uuid
+                meal_session_id = str(uuid.uuid4())
+
+                for food_item in food_items:
+                    food_nutrition = get_nutrition_from_multiple_apis(food_item)
+
+                    if food_nutrition:
                         nutrition_data.append(food_nutrition)
-                        
+
                         # Add to totals
                         total_nutrition['calories'] += food_nutrition['calories']
                         total_nutrition['protein'] += food_nutrition['protein']
@@ -653,11 +692,17 @@ def analyze_meal():
                              food_nutrition['calories'], food_nutrition['protein'],
                              food_nutrition['fat'], food_nutrition['carbs'],
                              current_date, meal_session_id))
-                    
+                    else:
+                        error_message = f"Could not find nutrition data for: {food_item}"
+                        break
+
+                if not error_message:
                     conn.commit()
-                    conn.close()
-                else:
-                    error_message = "Nutrition data not found for the provided items."
+                conn.close()
+
+                if not nutrition_data:
+                    error_message = "No nutrition data found for any of the provided items."
+
             except Exception as e:
                 error_message = f"Error processing meal: {str(e)}"
         else:
@@ -732,24 +777,24 @@ def meals():
                 break
             food_items.append(food_item.strip())
             i += 1
-        
+
         if food_items:
             combined_query = ', '.join(food_items)
-            
+
             try:
                 response = requests.post(API_URL,
                                          headers=HEADERS,
                                          json={"query": combined_query})
                 data = response.json()
-                
+
                 if 'foods' in data and data['foods']:
                     conn = sqlite3.connect('cedhealth.db')
                     c = conn.cursor()
                     current_date = datetime.now().date().isoformat()
-                    
+
                     import uuid
                     meal_session_id = str(uuid.uuid4())
-                    
+
                     for food in data['foods']:
                         food_nutrition = {
                             'name': food['food_name'],
@@ -759,9 +804,9 @@ def meals():
                             'carbs': food['nf_total_carbohydrate'],
                             'fiber': food.get('nf_dietary_fiber', 0)
                         }
-                        
+
                         analyze_results.append(food_nutrition)
-                        
+
                         total_nutrition['calories'] += food_nutrition['calories']
                         total_nutrition['protein'] += food_nutrition['protein']
                         total_nutrition['fat'] += food_nutrition['fat']
@@ -777,7 +822,7 @@ def meals():
                              food_nutrition['calories'], food_nutrition['protein'],
                              food_nutrition['fat'], food_nutrition['carbs'],
                              current_date, meal_session_id))
-                    
+
                     conn.commit()
                     conn.close()
                 else:
@@ -791,22 +836,22 @@ def meals():
     date_filter = request.args.get('date')
     if not date_filter:
         date_filter = datetime.now().date().isoformat()
-    
+
     user_id = session['user_id']
     conn = sqlite3.connect('cedhealth.db')
     c = conn.cursor()
-    
+
     c.execute('SELECT * FROM meals WHERE user_id = ? AND date = ? ORDER BY id DESC',
               (user_id, date_filter))
     meals_by_user = c.fetchall()
-    
+
     c.execute('SELECT SUM(protein), SUM(carbs), SUM(fat) FROM meals WHERE user_id = ? AND date = ?',
               (user_id, date_filter))
     macro_totals = c.fetchone()
-    
+
     c.execute('SELECT protein_goal, carbs_goal, fat_goal FROM goals WHERE user_id = ?', (user_id,))
     macro_goals = c.fetchone()
-    
+
     # Get saved meals
     c.execute('''
         SELECT sm.id, sm.meal_name, sm.created_date,
@@ -820,7 +865,7 @@ def meals():
         GROUP BY sm.id, sm.meal_name, sm.created_date
         ORDER BY sm.created_date DESC
     ''', (user_id,))
-    
+
     saved_meals_data = c.fetchall()
     conn.close()
 
@@ -860,15 +905,15 @@ def log_weight():
     if weight and 50 <= weight <= 999:  # Basic validation
         conn = sqlite3.connect('cedhealth.db')
         c = conn.cursor()
-        
+
         # Use INSERT OR REPLACE for upsert functionality
         today = datetime.now().date().isoformat()
         user_id = session['user_id']
-        
+
         # Check if record exists for today
         c.execute('SELECT id FROM daily_weights WHERE user_id = ? AND date = ?', (user_id, today))
         existing = c.fetchone()
-        
+
         if existing:
             # Update existing record
             c.execute('UPDATE daily_weights SET weight = ? WHERE user_id = ? AND date = ?',
@@ -877,12 +922,12 @@ def log_weight():
             # Insert new record
             c.execute('INSERT INTO daily_weights (user_id, weight, date) VALUES (?, ?, ?)',
                       (user_id, weight, today))
-        
+
         # Also update the old weight_logs table for backward compatibility
         c.execute('DELETE FROM weight_logs WHERE user_id = ? AND date = ?', (user_id, today))
         c.execute('INSERT INTO weight_logs (user_id, weight, date) VALUES (?, ?, ?)',
                   (user_id, weight, today))
-        
+
         conn.commit()
         conn.close()
 
@@ -893,14 +938,14 @@ def log_weight():
 def create_meal():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
     error_message = None
     success_message = None
-    
+
     if request.method == 'POST':
         meal_name = request.form.get('meal_name')
         food_items = []
-        
+
         # Get all food items from form
         i = 0
         while True:
@@ -910,20 +955,20 @@ def create_meal():
                 break
             food_items.append(f"{food_quantity} {food_name}")
             i += 1
-        
+
         if meal_name and food_items:
             try:
                 conn = sqlite3.connect('cedhealth.db')
                 c = conn.cursor()
-                
+
                 # Create saved meal
                 c.execute('''
                     INSERT INTO saved_meals (user_id, meal_name, created_date)
                     VALUES (?, ?, ?)
                 ''', (session['user_id'], meal_name, datetime.now().date().isoformat()))
-                
+
                 saved_meal_id = c.lastrowid
-                
+
                 # Process each food item
                 for food_item in food_items:
                     try:
@@ -931,10 +976,10 @@ def create_meal():
                                                  headers=HEADERS,
                                                  json={"query": food_item})
                         data = response.json()
-                        
+
                         if 'foods' in data and data['foods']:
                             food = data['foods'][0]
-                            
+
                             # Save food item to saved_meal_items
                             c.execute('''
                                 INSERT INTO saved_meal_items (saved_meal_id, food_name, quantity, calories, protein, fat, carbs)
@@ -948,7 +993,7 @@ def create_meal():
                     except Exception as e:
                         error_message = f"Error processing '{food_item}': {str(e)}"
                         break
-                
+
                 if not error_message:
                     conn.commit()
                     success_message = f"Custom meal '{meal_name}' created successfully!"
@@ -956,14 +1001,14 @@ def create_meal():
                     # Delete the saved meal if there was an error
                     c.execute('DELETE FROM saved_meals WHERE id = ?', (saved_meal_id,))
                     conn.commit()
-                
+
                 conn.close()
-                
+
             except Exception as e:
                 error_message = f"Error creating meal: {str(e)}"
         else:
             error_message = "Please enter a meal name and at least one food item."
-    
+
     return render_template('create_meal.html', 
                          error_message=error_message, 
                          success_message=success_message)
@@ -973,10 +1018,10 @@ def create_meal():
 def saved_meals():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
     conn = sqlite3.connect('cedhealth.db')
     c = conn.cursor()
-    
+
     # Get saved meals with their total nutrition
     c.execute('''
         SELECT sm.id, sm.meal_name, sm.created_date,
@@ -990,10 +1035,10 @@ def saved_meals():
         GROUP BY sm.id, sm.meal_name, sm.created_date
         ORDER BY sm.created_date DESC
     ''', (session['user_id'],))
-    
+
     saved_meals_data = c.fetchall()
     conn.close()
-    
+
     return render_template('saved_meals.html', saved_meals=saved_meals_data)
 
 
@@ -1001,10 +1046,10 @@ def saved_meals():
 def log_saved_meal(saved_meal_id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
     conn = sqlite3.connect('cedhealth.db')
     c = conn.cursor()
-    
+
     # Get saved meal items
     c.execute('''
         SELECT smi.food_name, smi.calories, smi.protein, smi.fat, smi.carbs
@@ -1012,12 +1057,12 @@ def log_saved_meal(saved_meal_id):
         JOIN saved_meals sm ON smi.saved_meal_id = sm.id
         WHERE sm.id = ? AND sm.user_id = ?
     ''', (saved_meal_id, session['user_id']))
-    
+
     meal_items = c.fetchall()
-    
+
     if meal_items:
         current_date = datetime.now().date().isoformat()
-        
+
         # Log each item as a separate meal entry with today's date
         for item in meal_items:
             food_name, calories, protein, fat, carbs = item
@@ -1025,9 +1070,9 @@ def log_saved_meal(saved_meal_id):
                 INSERT INTO meals (user_id, meal_name, calories, protein, fat, carbs, date)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             ''', (session['user_id'], food_name, calories, protein, fat, carbs, current_date))
-        
+
         conn.commit()
-    
+
     conn.close()
     return redirect(url_for('meals'))
 
@@ -1036,15 +1081,15 @@ def log_saved_meal(saved_meal_id):
 def explore_foods():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
     error_message = None
     product_info = None
     food_nutrition = None
-    
+
     # Handle barcode scanning
     if request.method == 'POST' and request.form.get('action') == 'scan_barcode':
         barcode = request.form.get('barcode', '').strip()
-        
+
         if not barcode:
             error_message = "Please enter a barcode."
         else:
@@ -1052,10 +1097,10 @@ def explore_foods():
                 url = f"https://world.openfoodfacts.org/api/v0/product/{barcode}.json"
                 response = requests.get(url)
                 data = response.json()
-                
+
                 if data.get('status') == 1 and 'product' in data:
                     product = data['product']
-                    
+
                     product_info = {
                         'name': product.get('product_name', 'Unknown Product'),
                         'brand': product.get('brands', 'Unknown Brand'),
@@ -1068,14 +1113,14 @@ def explore_foods():
                     }
                 else:
                     error_message = f"Product with barcode {barcode} not found in the database."
-                    
+
             except Exception as e:
                 error_message = f"Error fetching product data: {str(e)}"
-    
+
     # Handle food lookup
     elif request.method == 'POST' and request.form.get('action') == 'lookup_food':
         food_query = request.form.get('food_query', '').strip()
-        
+
         if not food_query:
             error_message = "Please enter a food name."
         else:
@@ -1084,7 +1129,7 @@ def explore_foods():
                                          headers=HEADERS,
                                          json={"query": food_query})
                 data = response.json()
-                
+
                 if 'foods' in data and data['foods']:
                     food = data['foods'][0]
                     food_nutrition = {
@@ -1101,7 +1146,7 @@ def explore_foods():
                     error_message = "Nutrition data not found for the provided food."
             except Exception as e:
                 error_message = f"Error fetching nutrition data: {str(e)}"
-    
+
     return render_template('explore_foods.html', 
                          error_message=error_message, 
                          product_info=product_info,
@@ -1112,34 +1157,34 @@ def explore_foods():
 def workouts():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
     exercises_data = []
     gif_exercises_data = []
     categories_data = []
     error_message = None
     selected_category = request.args.get('category', '')
-    
+
     try:
         # Fetch exercise categories
         categories_url = "https://wger.de/api/v2/exercisecategory/"
         categories_response = requests.get(categories_url)
         categories_json = categories_response.json()
-        
+
         if 'results' in categories_json:
             for category in categories_json['results']:
                 categories_data.append({
                     'id': category.get('id'),
                     'name': category.get('name', 'Unknown Category')
                 })
-        
+
         # Fetch regular exercises
         exercises_url = "https://wger.de/api/v2/exercise/?language=2&limit=10"
         if selected_category:
             exercises_url += f"&category={selected_category}"
-            
+
         exercises_response = requests.get(exercises_url)
         exercises_json = exercises_response.json()
-        
+
         if 'results' in exercises_json:
             for exercise in exercises_json['results']:
                 exercise_data = {
@@ -1148,19 +1193,19 @@ def workouts():
                     'category': exercise.get('category', 'Unknown Category')
                 }
                 exercises_data.append(exercise_data)
-        
+
         # Fetch GIF exercises from ExerciseDB
         gif_url = "https://exercisedb.p.rapidapi.com/exercises?limit=8"
         gif_headers = {
             "x-rapidapi-key": "e5ab48f2b8msh50c42a50dce5e64p1592edjsn1ad068fbd807",
             "x-rapidapi-host": "exercisedb.p.rapidapi.com"
         }
-        
+
         gif_response = requests.get(gif_url, headers=gif_headers)
         gif_response.raise_for_status()
-        
+
         gif_exercises_json = gif_response.json()
-        
+
         if isinstance(gif_exercises_json, list):
             for exercise in gif_exercises_json:
                 if isinstance(exercise, dict):
@@ -1172,10 +1217,10 @@ def workouts():
                         'gifUrl': exercise.get('gifUrl', '')
                     }
                     gif_exercises_data.append(exercise_data)
-    
+
     except Exception as e:
         error_message = f"Error fetching exercises: {str(e)}"
-    
+
     return render_template('workouts.html', 
                          exercises=exercises_data,
                          gif_exercises=gif_exercises_data,
@@ -1188,10 +1233,10 @@ def workouts():
 def gif_exercises():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
     exercises_data = []
     error_message = None
-    
+
     try:
         # Fetch exercises from ExerciseDB API via RapidAPI
         url = "https://exercisedb.p.rapidapi.com/exercises?limit=12"
@@ -1199,12 +1244,12 @@ def gif_exercises():
             "x-rapidapi-key": "e5ab48f2b8msh50c42a50dce5e64p1592edjsn1ad068fbd807",
             "x-rapidapi-host": "exercisedb.p.rapidapi.com"
         }
-        
+
         response = requests.get(url, headers=headers)
         response.raise_for_status()  # Raise an exception for bad status codes
-        
+
         exercises_json = response.json()
-        
+
         # Check if response is a list (expected format from ExerciseDB)
         if isinstance(exercises_json, list):
             # Process exercises
@@ -1220,14 +1265,14 @@ def gif_exercises():
                     exercises_data.append(exercise_data)
         else:
             error_message = "Unexpected response format from ExerciseDB API"
-    
+
     except requests.exceptions.RequestException as e:
         error_message = f"Network error fetching exercises: {str(e)}"
     except ValueError as e:
         error_message = f"Error parsing exercise data: {str(e)}"
     except Exception as e:
         error_message = f"Error fetching exercises: {str(e)}"
-    
+
     return render_template('gif_exercises.html', exercises=exercises_data, error_message=error_message)
 
 
@@ -1235,28 +1280,28 @@ def gif_exercises():
 def meal_of_the_day():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
     recipe_data = None
     error_message = None
-    
+
     try:
         # Fetch random recipe from Spoonacular API
         url = "https://api.spoonacular.com/recipes/random?number=1"
         headers = {"x-api-key": "669ab752fed34d5ea3f9b188b1983b8b"}
-        
+
         response = requests.get(url, headers=headers)
         data = response.json()
-        
+
         if 'recipes' in data and data['recipes']:
             recipe = data['recipes'][0]
-            
+
             # Clean HTML from summary using BeautifulSoup
             from bs4 import BeautifulSoup
             summary = recipe.get('summary', '')
             if summary:
                 soup = BeautifulSoup(summary, 'html.parser')
                 summary = soup.get_text()
-            
+
             recipe_data = {
                 'title': recipe.get('title', 'Unknown Recipe'),
                 'image': recipe.get('image', ''),
@@ -1266,10 +1311,10 @@ def meal_of_the_day():
             }
         else:
             error_message = "No recipe found. Please try again."
-            
+
     except Exception as e:
         error_message = f"Error fetching recipe: {str(e)}"
-    
+
     return render_template('meal_of_the_day.html', recipe=recipe_data, error_message=error_message)
 
 
@@ -1277,11 +1322,11 @@ def meal_of_the_day():
 def recommended_diet():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
     user_id = session['user_id']
     conn = sqlite3.connect('cedhealth.db')
     c = conn.cursor()
-    
+
     # Get user's initial goals and current weight
     c.execute('''
         SELECT weight, weight_unit, goal_type, target_weight 
@@ -1292,17 +1337,17 @@ def recommended_diet():
     ''', (user_id,))
     user_data = c.fetchone()
     conn.close()
-    
+
     if not user_data:
         return render_template('recommended_diet.html', 
                              error_message="Please complete your initial goals setup first.",
                              meal_plan=None, macros=None)
-    
+
     weight, weight_unit, goal_type, target_weight = user_data
-    
+
     # Convert weight to lbs if needed
     weight_lbs = weight * 2.20462 if weight_unit == 'kg' else weight
-    
+
     # Calculate macros based on goal
     if goal_type == 'gain_weight':  # Bulk
         calories_per_lb = 19  # Average of 18-20
@@ -1316,18 +1361,18 @@ def recommended_diet():
         calories_per_lb = 15.5  # Average of 15-16
         protein_per_lb = 1.0
         fat_per_lb = 0.35  # Conservative estimate
-    
+
     # Calculate daily targets
     target_calories = int(weight_lbs * calories_per_lb)
     target_protein = int(weight_lbs * protein_per_lb)
     target_fat = int(weight_lbs * fat_per_lb)
-    
+
     # Calculate carbs (rest of calories after protein and fat)
     protein_calories = target_protein * 4
     fat_calories = target_fat * 9
     carb_calories = target_calories - protein_calories - fat_calories
     target_carbs = int(carb_calories / 4)
-    
+
     macros = {
         'calories': target_calories,
         'protein': target_protein,
@@ -1335,11 +1380,11 @@ def recommended_diet():
         'carbs': target_carbs,
         'goal_type': goal_type
     }
-    
+
     # Get meal plan from Spoonacular
     meal_plan = None
     error_message = None
-    
+
     try:
         # Call Spoonacular meal planner API
         url = "https://api.spoonacular.com/mealplanner/generate"
@@ -1348,10 +1393,10 @@ def recommended_diet():
             'targetCalories': target_calories,
             'apiKey': '669ab752fed34d5ea3f9b188b1983b8b'
         }
-        
+
         response = requests.get(url, params=params)
         data = response.json()
-        
+
         if 'meals' in data:
             meal_plan = []
             for meal in data['meals']:
@@ -1366,10 +1411,10 @@ def recommended_diet():
                 meal_plan.append(meal_info)
         else:
             error_message = "Could not generate meal plan. Please try again."
-            
+
     except Exception as e:
         error_message = f"Error fetching meal plan: {str(e)}"
-    
+
     return render_template('recommended_diet.html', 
                          macros=macros, 
                          meal_plan=meal_plan, 
