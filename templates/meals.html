@@ -148,98 +148,179 @@
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         }
 
-        /* Enhanced meal cards */
-        .meals-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 24px;
+        /* Simplified meal cards */
+        .meals-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
             margin-top: 20px;
         }
 
-        .meal-card {
-            background: linear-gradient(135deg, rgba(95, 48, 255, 0.03) 0%, rgba(150, 100, 255, 0.03) 100%);
-            border-radius: 20px;
-            padding: 24px;
+        .simple-meal-card {
+            background: rgba(42, 42, 42, 0.6);
+            border-radius: 12px;
+            padding: 16px;
             border: 1px solid rgba(95, 48, 255, 0.1);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 16px;
         }
 
-        .meal-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(135deg, #5f30ff 0%, #9664ff 100%);
-        }
-
-        .meal-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(95, 48, 255, 0.15);
+        .simple-meal-card:hover {
+            background: rgba(42, 42, 42, 0.8);
             border-color: rgba(95, 48, 255, 0.3);
         }
 
-        .meal-header {
+        .meal-main-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .meal-name-time {
             display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 20px;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
         }
 
-        .meal-header h3 {
-            color: var(--text-primary);
-            font-size: 1.1rem;
+        .meal-name-time h4 {
+            color: #e0e0e0;
+            font-size: 1rem;
             font-weight: 600;
-            margin-bottom: 4px;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .meal-date {
+        .meal-name-time .time {
             font-size: 0.8rem;
-            color: var(--text-muted);
+            color: #888;
             background: rgba(95, 48, 255, 0.1);
-            padding: 4px 8px;
+            padding: 2px 8px;
             border-radius: 6px;
-            font-weight: 500;
+            white-space: nowrap;
         }
 
-        .meal-nutrition {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
+        .nutrition-summary {
+            display: flex;
+            align-items: center;
             gap: 16px;
-            margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
-        .meal-nutrition .nutrition-item {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(95, 48, 255, 0.1);
-            border-radius: 12px;
-            padding: 16px;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-
-        .meal-nutrition .nutrition-item:hover {
-            background: rgba(95, 48, 255, 0.05);
-            transform: scale(1.02);
-        }
-
-        .meal-nutrition .value {
-            display: block;
-            font-size: 1.4rem;
+        .nutrition-summary .calories {
+            color: #5f30ff;
             font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 4px;
+            font-size: 0.9rem;
         }
 
-        .meal-nutrition .label {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .nutrition-summary .macros {
+            color: #888;
+            font-size: 0.8rem;
             font-weight: 500;
+        }
+
+        .meal-photo {
+            flex-shrink: 0;
+        }
+
+        .meal-photo img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .meal-photo img:hover {
+            transform: scale(1.1);
+        }
+
+        .meal-quick-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .action-btn {
+            background: rgba(95, 48, 255, 0.1);
+            border: 1px solid rgba(95, 48, 255, 0.2);
+            border-radius: 8px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-btn:hover {
+            background: rgba(95, 48, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .action-btn.edit:hover {
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        .action-btn.notes:hover {
+            background: rgba(16, 185, 129, 0.2);
+        }
+
+        .action-btn.photo:hover {
+            background: rgba(245, 158, 11, 0.2);
+        }
+
+        .action-btn.favorite:hover {
+            background: rgba(245, 158, 11, 0.2);
+        }
+
+        .action-btn.delete:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .meal-notes-summary {
+            width: 100%;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(95, 48, 255, 0.1);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .meal-notes-summary span {
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 6px;
+            background: rgba(95, 48, 255, 0.05);
+            color: #888;
+        }
+
+        .meal-notes-summary .mood {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .meal-notes-summary .hunger {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+
+        .meal-notes-summary .notes {
+            background: rgba(99, 102, 241, 0.1);
+            color: #6366f1;
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         /* Enhanced search styling */
@@ -535,19 +616,47 @@
                 gap: 12px !important;
             }
 
-            .meals-grid {
-                grid-template-columns: 1fr;
-                gap: 16px;
+            .simple-meal-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .meal-main-info {
+                width: 100%;
+            }
+
+            .meal-name-time {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+            }
+
+            .meal-name-time h4 {
+                white-space: normal;
+            }
+
+            .nutrition-summary {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .meal-quick-actions {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .meal-notes-summary {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
             }
 
             .macro-grid {
                 grid-template-columns: 1fr;
                 gap: 16px;
-            }
-
-            .meal-nutrition {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 12px;
             }
 
             .nutrition-grid {
@@ -745,74 +854,56 @@
                         </div>
                     </div>
 
-                    <!-- Meals List -->
+                    <!-- Simplified Meals List -->
                     {% if meals %}
-                        <div class="meals-grid">
+                        <div class="meals-list">
                             {% for meal in meals %}
-                                <div class="meal-card">
-                                    <div class="meal-header">
-                                        <h3>{{ meal[2] }}</h3>
-                                        <span class="meal-date">{{ meal[7] }}</span>
-                                    </div>
-                                    <div class="meal-nutrition">
-                                        <div class="nutrition-item">
-                                            <span class="value">{{ "%.0f"|format(meal[3]) }}</span>
-                                            <span class="label">Calories</span>
+                                <div class="simple-meal-card">
+                                    <div class="meal-main-info">
+                                        <div class="meal-name-time">
+                                            <h4>{{ meal[2] }}</h4>
+                                            <span class="time">{{ meal[7] }}</span>
                                         </div>
-                                        <div class="nutrition-item">
-                                            <span class="value">{{ "%.1f"|format(meal[4]) }}g</span>
-                                            <span class="label">Protein</span>
-                                        </div>
-                                        <div class="nutrition-item">
-                                            <span class="value">{{ "%.1f"|format(meal[5]) }}g</span>
-                                            <span class="label">Fat</span>
-                                        </div>
-                                        <div class="nutrition-item">
-                                            <span class="value">{{ "%.1f"|format(meal[6]) }}g</span>
-                                            <span class="label">Carbs</span>
+                                        <div class="nutrition-summary">
+                                            <span class="calories">{{ "%.0f"|format(meal[3]) }} cal</span>
+                                            <span class="macros">P: {{ "%.0f"|format(meal[4]) }}g | C: {{ "%.0f"|format(meal[6]) }}g | F: {{ "%.0f"|format(meal[5]) }}g</span>
                                         </div>
                                     </div>
-                                    <!-- Meal Photo -->
+                                    
                                     {% if meal[11] %}
-                                        <div style="margin: 16px 0;">
+                                        <div class="meal-photo">
                                             <img src="{{ url_for('uploaded_meal_photo', filename='thumb_' + meal[11]) }}" 
                                                  alt="Meal photo" 
-                                                 style="width: 100%; max-width: 200px; height: 150px; object-fit: cover; border-radius: 12px; cursor: pointer;"
                                                  onclick="viewFullPhoto('{{ meal[11] }}')">
                                         </div>
                                     {% endif %}
 
-                                    <!-- Meal Notes Display -->
-                                    {% if meal[8] or meal[9] or meal[10] %}
-                                        <div style="margin: 16px 0; padding: 12px; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2);">
-                                            {% if meal[8] %}<p><strong>Notes:</strong> {{ meal[8] }}</p>{% endif %}
-                                            {% if meal[9] %}<p><strong>Mood:</strong> {{ meal[9] }}</p>{% endif %}
-                                            {% if meal[10] %}<p><strong>Hunger Level:</strong> {{ meal[10] }}/10</p>{% endif %}
-                                        </div>
-                                    {% endif %}
-
-                                    <div class="meal-actions" style="display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap;">
-                                        <button class="btn btn-secondary" onclick="editMeal({{ meal[0] }}, '{{ meal[2] }}', {{ meal[3] }}, {{ meal[4] }}, {{ meal[5] }}, {{ meal[6] }})" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 500;">Edit</button>
-
-                                        <button onclick="addMealNote({{ meal[0] }}, '{{ meal[8] or '' }}', '{{ meal[9] or '' }}', {{ meal[10] or 5 }})" 
-                                                style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer;">📝 Notes</button>
-
-                                        <button onclick="uploadPhoto({{ meal[0] }})" 
-                                                style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer;">📸 Photo</button>
-
+                                    <div class="meal-quick-actions">
+                                        <button onclick="editMeal({{ meal[0] }}, '{{ meal[2] }}', {{ meal[3] }}, {{ meal[4] }}, {{ meal[5] }}, {{ meal[6] }})" class="action-btn edit">✏️</button>
+                                        <button onclick="addMealNote({{ meal[0] }}, '{{ meal[8] or '' }}', '{{ meal[9] or '' }}', {{ meal[10] or 5 }})" class="action-btn notes">📝</button>
+                                        {% if not meal[11] %}
+                                            <button onclick="uploadPhoto({{ meal[0] }})" class="action-btn photo">📸</button>
+                                        {% endif %}
                                         <form method="POST" action="{{ url_for('add_to_favorites') }}" style="display: inline;">
                                             <input type="hidden" name="meal_name" value="{{ meal[2] }}">
                                             <input type="hidden" name="calories" value="{{ meal[3] }}">
                                             <input type="hidden" name="protein" value="{{ meal[4] }}">
                                             <input type="hidden" name="fat" value="{{ meal[5] }}">
                                             <input type="hidden" name="carbs" value="{{ meal[6] }}">
-                                            <button type="submit" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer;">⭐ Favorite</button>
+                                            <button type="submit" class="action-btn favorite">⭐</button>
                                         </form>
-
                                         <form method="POST" action="{{ url_for('delete_meal', meal_id=meal[0]) }}" style="display: inline;">
-                                            <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this meal?')">Delete</button>
+                                            <button type="submit" class="action-btn delete" onclick="return confirm('Delete this meal?')">🗑️</button>
                                         </form>
                                     </div>
+                                    
+                                    {% if meal[8] or meal[9] or meal[10] %}
+                                        <div class="meal-notes-summary">
+                                            {% if meal[9] %}<span class="mood">{{ meal[9] }}</span>{% endif %}
+                                            {% if meal[10] %}<span class="hunger">Hunger: {{ meal[10] }}/10</span>{% endif %}
+                                            {% if meal[8] %}<span class="notes">{{ meal[8][:50] }}{% if meal[8]|length > 50 %}...{% endif %}</span>{% endif %}
+                                        </div>
+                                    {% endif %}
                                 </div>
                             {% endfor %}
                         </div>
