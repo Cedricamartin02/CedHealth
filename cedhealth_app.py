@@ -109,39 +109,140 @@ def get_nutrition_from_multiple_apis(food_item):
     except Exception as e:
         print(f"USDA API error for '{food_item}': {e}")
 
-    # 3. Try Edamam Food Database API
+    # 3. Try FoodData Central with specific McDonald's search
     try:
-        edamam_app_id = "3486324a"  # Using same as Nutritionix for now
-        edamam_app_key = "6ecc62cc99ad39d61f1669bf4ea005ee"
-        edamam_url = f"https://api.edamam.com/api/food-database/v2/parser?app_id={edamam_app_id}&app_key={edamam_app_key}&ingr={food_item}"
+        # First try with "McDonald's" prefix for better results
+        mcdonalds_query = f"mcdonald's {food_item}" if not food_item.lower().startswith('mc') and 'mcdonald' not in food_item.lower() else food_item
         
-        response = requests.get(edamam_url, timeout=5)
+        usda_api_key = "DEMO_KEY"
+        search_url = f"https://api.nal.usda.gov/fdc/v1/foods/search?api_key={usda_api_key}&query={mcdonalds_query}&pageSize=5&dataType=Branded"
+        response = requests.get(search_url, timeout=5)
         data = response.json()
         
-        if 'hints' in data and data['hints']:
-            food = data['hints'][0]['food']
-            nutrients = food.get('nutrients', {})
-            
-            return {
-                'name': food.get('label', food_item),
-                'calories': nutrients.get('ENERC_KCAL', 0),
-                'protein': nutrients.get('PROCNT', 0),
-                'fat': nutrients.get('FAT', 0),
-                'carbs': nutrients.get('CHOCDF', 0),
-                'fiber': nutrients.get('FIBTG', 0),
-                'sugar': nutrients.get('SUGAR', 0),
-                'sodium': nutrients.get('NA', 0) / 1000 if nutrients.get('NA') else 0,  # Convert mg to g
-                'potassium': nutrients.get('K', 0) / 1000 if nutrients.get('K') else 0,
-                'cholesterol': nutrients.get('CHOLE', 0),
-                'saturated_fat': nutrients.get('FASAT', 0),
-                'calcium': nutrients.get('CA', 0),
-                'iron': nutrients.get('FE', 0),
-                'vitamin_a': nutrients.get('VITA_RAE', 0),
-                'vitamin_c': nutrients.get('VITC', 0),
-                'source': 'edamam'
-            }
+        if 'foods' in data and data['foods']:
+            # Look for McDonald's branded items first
+            for food in data['foods']:
+                brand_owner = food.get('brandOwner', '').lower()
+                description = food.get('description', '').lower()
+                
+                if 'mcdonald' in brand_owner or 'mcdonald' in description:
+                    nutrients = food.get('foodNutrients', [])
+                    
+                    # Extract nutrients by nutrient ID
+                    nutrition_map = {}
+                    for nutrient in nutrients:
+                        nutrient_id = nutrient.get('nutrientId')
+                        value = nutrient.get('value', 0)
+                        
+                        # Map USDA nutrient IDs to our fields
+                        if nutrient_id == 1008:  # Energy
+                            nutrition_map['calories'] = value
+                        elif nutrient_id == 1003:  # Protein
+                            nutrition_map['protein'] = value
+                        elif nutrient_id == 1004:  # Total lipid (fat)
+                            nutrition_map['fat'] = value
+                        elif nutrient_id == 1005:  # Carbohydrate
+                            nutrition_map['carbs'] = value
+                        elif nutrient_id == 1079:  # Fiber
+                            nutrition_map['fiber'] = value
+                        elif nutrient_id == 2000:  # Sugars
+                            nutrition_map['sugar'] = value
+                        elif nutrient_id == 1093:  # Sodium
+                            nutrition_map['sodium'] = value / 1000 if value else 0  # Convert mg to g
+                        elif nutrient_id == 1087:  # Calcium
+                            nutrition_map['calcium'] = value
+                        elif nutrient_id == 1089:  # Iron
+                            nutrition_map['iron'] = value
+                        elif nutrient_id == 1258:  # Saturated fat
+                            nutrition_map['saturated_fat'] = value
+                        elif nutrient_id == 1253:  # Cholesterol
+                            nutrition_map['cholesterol'] = value
+                    
+                    return {
+                        'name': food.get('description', food_item),
+                        'calories': nutrition_map.get('calories', 0),
+                        'protein': nutrition_map.get('protein', 0),
+                        'fat': nutrition_map.get('fat', 0),
+                        'carbs': nutrition_map.get('carbs', 0),
+                        'fiber': nutrition_map.get('fiber', 0),
+                        'sugar': nutrition_map.get('sugar', 0),
+                        'sodium': nutrition_map.get('sodium', 0),
+                        'potassium': 0,
+                        'cholesterol': nutrition_map.get('cholesterol', 0),
+                        'saturated_fat': nutrition_map.get('saturated_fat', 0),
+                        'calcium': nutrition_map.get('calcium', 0),
+                        'iron': nutrition_map.get('iron', 0),
+                        'vitamin_a': 0,
+                        'vitamin_c': 0,
+                        'source': 'usda_branded'
+                    }
     except Exception as e:
-        print(f"Edamam API error for '{food_item}': {e}")
+        print(f"USDA Branded search error for '{food_item}': {e}")
+
+    # 4. Try Spoonacular Food API for McDonald's items
+    try:
+        spoonacular_api_key = "669ab752fed34d5ea3f9b188b1983b8b"
+        spoon_query = f"mcdonald's {food_item}" if not food_item.lower().startswith('mc') and 'mcdonald' not in food_item.lower() else food_item
+        spoon_url = f"https://api.spoonacular.com/food/ingredients/search?query={spoon_query}&apiKey={spoonacular_api_key}&number=3"
+        
+        response = requests.get(spoon_url, timeout=5)
+        data = response.json()
+        
+        if 'results' in data and data['results']:
+            for ingredient in data['results']:
+                ingredient_name = ingredient.get('name', '').lower()
+                if 'mcdonald' in ingredient_name or any(term in ingredient_name for term in ['big mac', 'quarter pounder', 'mcchicken', 'fries']):
+                    # Get detailed nutrition info
+                    ingredient_id = ingredient.get('id')
+                    if ingredient_id:
+                        detail_url = f"https://api.spoonacular.com/food/ingredients/{ingredient_id}/information?apiKey={spoonacular_api_key}&amount=1&unit=serving"
+                        detail_response = requests.get(detail_url, timeout=5)
+                        detail_data = detail_response.json()
+                        
+                        nutrition = detail_data.get('nutrition', {})
+                        nutrients = nutrition.get('nutrients', [])
+                        
+                        # Extract nutrition data
+                        nutrition_values = {}
+                        for nutrient in nutrients:
+                            name = nutrient.get('name', '').lower()
+                            amount = nutrient.get('amount', 0)
+                            
+                            if 'calorie' in name:
+                                nutrition_values['calories'] = amount
+                            elif 'protein' in name:
+                                nutrition_values['protein'] = amount
+                            elif 'fat' in name and 'saturated' not in name:
+                                nutrition_values['fat'] = amount
+                            elif 'carbohydrate' in name:
+                                nutrition_values['carbs'] = amount
+                            elif 'fiber' in name:
+                                nutrition_values['fiber'] = amount
+                            elif 'sugar' in name:
+                                nutrition_values['sugar'] = amount
+                            elif 'sodium' in name:
+                                nutrition_values['sodium'] = amount / 1000 if amount else 0  # Convert mg to g
+                        
+                        return {
+                            'name': ingredient.get('name', food_item),
+                            'calories': nutrition_values.get('calories', 0),
+                            'protein': nutrition_values.get('protein', 0),
+                            'fat': nutrition_values.get('fat', 0),
+                            'carbs': nutrition_values.get('carbs', 0),
+                            'fiber': nutrition_values.get('fiber', 0),
+                            'sugar': nutrition_values.get('sugar', 0),
+                            'sodium': nutrition_values.get('sodium', 0),
+                            'potassium': 0,
+                            'cholesterol': 0,
+                            'saturated_fat': 0,
+                            'calcium': 0,
+                            'iron': 0,
+                            'vitamin_a': 0,
+                            'vitamin_c': 0,
+                            'source': 'spoonacular'
+                        }
+    except Exception as e:
+        print(f"Spoonacular API error for '{food_item}': {e}")
 
     # 4. Try Open Food Facts API (for branded items)
     try:
@@ -722,21 +823,54 @@ def search_foods():
         except Exception as e:
             print(f"Nutritionix search error: {e}")
 
-        # 2. Try USDA FoodData Central for comprehensive database
+        # 2. Try USDA FoodData Central for comprehensive database (prioritize McDonald's)
         try:
             usda_api_key = "DEMO_KEY"
-            usda_search_url = f"https://api.nal.usda.gov/fdc/v1/foods/search?api_key={usda_api_key}&query={query}&pageSize=3"
+            # Try McDonald's specific search first
+            mcdonalds_query = f"mcdonald's {query}" if not query.lower().startswith('mc') and 'mcdonald' not in query.lower() else query
+            usda_search_url = f"https://api.nal.usda.gov/fdc/v1/foods/search?api_key={usda_api_key}&query={mcdonalds_query}&pageSize=5&dataType=Branded"
             usda_response = requests.get(usda_search_url, timeout=3)
             usda_data = usda_response.json()
 
             if 'foods' in usda_data:
+                # First add McDonald's branded items
+                mcdonalds_items = []
+                other_items = []
+                
                 for food in usda_data['foods']:
-                    result['usda'].append({
+                    brand_owner = food.get('brandOwner', '').lower()
+                    description = food.get('description', '').lower()
+                    
+                    food_item = {
                         'food_name': food.get('description', ''),
                         'brand_name': food.get('brandOwner', 'USDA'),
                         'category': food.get('foodCategory', ''),
                         'source': 'usda'
-                    })
+                    }
+                    
+                    if 'mcdonald' in brand_owner or 'mcdonald' in description:
+                        mcdonalds_items.append(food_item)
+                    else:
+                        other_items.append(food_item)
+                
+                # Add McDonald's items first, then others
+                result['usda'].extend(mcdonalds_items[:2])
+                result['usda'].extend(other_items[:1])
+                
+            # If no McDonald's items found, try regular search
+            if not result['usda'] or not any('mcdonald' in item['brand_name'].lower() for item in result['usda']):
+                regular_search_url = f"https://api.nal.usda.gov/fdc/v1/foods/search?api_key={usda_api_key}&query={query}&pageSize=2"
+                regular_response = requests.get(regular_search_url, timeout=3)
+                regular_data = regular_response.json()
+                
+                if 'foods' in regular_data:
+                    for food in regular_data['foods'][:2]:
+                        result['usda'].append({
+                            'food_name': food.get('description', ''),
+                            'brand_name': food.get('brandOwner', 'USDA'),
+                            'category': food.get('foodCategory', ''),
+                            'source': 'usda'
+                        })
         except Exception as e:
             print(f"USDA search error: {e}")
 
