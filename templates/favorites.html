@@ -1,0 +1,137 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Favorite Meals - CedHealth</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .favorites-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+            margin-top: 20px;
+        }
+
+        .favorite-card {
+            background: linear-gradient(135deg, rgba(95, 48, 255, 0.03) 0%, rgba(150, 100, 255, 0.03) 100%);
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid rgba(95, 48, 255, 0.1);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .favorite-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .favorite-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(95, 48, 255, 0.15);
+            border-color: rgba(95, 48, 255, 0.3);
+        }
+
+        .portion-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .portion-btn {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .portion-btn:hover {
+            background: linear-gradient(135deg, #5b5bf6 0%, #7c3aed 100%);
+            transform: translateY(-2px);
+        }
+
+        .nutrition-summary {
+            margin: 16px 0;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(95, 48, 255, 0.1);
+        }
+
+        .last-used {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⭐ Favorite Meals</h1>
+            <p>Quick add your favorite meals with portion control</p>
+        </div>
+
+        <div class="content">
+            <div class="section-card">
+                {% if favorites %}
+                    <div class="favorites-grid">
+                        {% for favorite in favorites %}
+                            <div class="favorite-card">
+                                <h3>{{ favorite[2] }}</h3>
+                                
+                                <div class="nutrition-summary">
+                                    <p><strong>Calories:</strong> {{ "%.0f"|format(favorite[3] or 0) }}</p>
+                                    <p><strong>Protein:</strong> {{ "%.1f"|format(favorite[4] or 0) }}g</p>
+                                    <p><strong>Fat:</strong> {{ "%.1f"|format(favorite[5] or 0) }}g</p>
+                                    <p><strong>Carbs:</strong> {{ "%.1f"|format(favorite[6] or 0) }}g</p>
+                                </div>
+
+                                <div class="portion-buttons">
+                                    <a href="{{ url_for('quick_add_favorite', favorite_id=favorite[0], multiplier=0.5) }}" 
+                                       class="portion-btn">½x Portion</a>
+                                    <a href="{{ url_for('quick_add_favorite', favorite_id=favorite[0], multiplier=1.0) }}" 
+                                       class="portion-btn">1x Portion</a>
+                                    <a href="{{ url_for('quick_add_favorite', favorite_id=favorite[0], multiplier=2.0) }}" 
+                                       class="portion-btn">2x Portion</a>
+                                </div>
+
+                                <div class="last-used">
+                                    Last used: {{ favorite[8][:10] if favorite[8] else 'Never' }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">⭐</div>
+                        <h3>No favorite meals yet</h3>
+                        <p>Add meals to favorites from your meals page to see them here</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="back-link">
+                <a href="/meals">← Back to Meals</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

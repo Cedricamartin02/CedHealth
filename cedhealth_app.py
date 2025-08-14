@@ -1,14 +1,29 @@
-from flask import Flask, render_template, request, redirect, url_for, session, make_response
+from flask import Flask, render_template, request, redirect, url_for, session, make_response, send_from_directory
 import sqlite3
 import requests
 from datetime import datetime, timedelta
 import hashlib
 import secrets
+import os
+import uuid
+from werkzeug.utils import secure_filename
+from PIL import Image
 from db_utils import get_db, close_db, execute, begin, commit, rollback
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
 app.teardown_appcontext(close_db)
+
+# File upload configuration
+UPLOAD_FOLDER = 'static/uploads/meal_photos'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
+
+# Create upload directory if it doesn't exist
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Nutritionix API Keys
 API_URL = "https://trackapi.nutritionix.com/v2/natural/nutrients"
@@ -301,6 +316,49 @@ def init_db():
         )
     ''')
 
+    # New tables for Quick Add features
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS meal_notes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            meal_id INTEGER,
+            notes TEXT,
+            mood TEXT,
+            hunger_level INTEGER,
+            created_at TEXT,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (meal_id) REFERENCES meals(id)
+        )
+    ''')
+
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS favorite_meals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            meal_name TEXT,
+            calories REAL,
+            protein REAL,
+            fat REAL,
+            carbs REAL,
+            created_at TEXT,
+            last_used TEXT,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS meal_photos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            meal_id INTEGER,
+            photo_filename TEXT,
+            photo_path TEXT,
+            uploaded_at TEXT,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (meal_id) REFERENCES meals(id)
+        )
+    ''')
+
     # Add columns if they don't exist (for existing databases)
     try:
         c.execute('ALTER TABLE meals ADD COLUMN quantity REAL')
@@ -339,6 +397,52 @@ def init_db():
 
 init_db()
 
+
+# ---------- FILE UPLOAD HELPER FUNCTIONS ----------
+def allowed_file(filename):
+    """Check if file extension is allowed"""
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def create_thumbnail(image_path, thumbnail_path, size=(200, 200)):
+    """Create a thumbnail from an uploaded image"""
+    try:
+        with Image.open(image_path) as img:
+            img.thumbnail(size, Image.Resampling.LANCZOS)
+            img.save(thumbnail_path, optimize=True, quality=85)
+        return True
+    except Exception as e:
+        print(f"Error creating thumbnail: {e}")
+        return False
+
+def save_meal_photo(photo_file, user_id, meal_id):
+    """Save meal photo and create thumbnail"""
+    if photo_file and allowed_file(photo_file.filename):
+        # Generate unique filename
+        filename = secure_filename(photo_file.filename)
+        unique_filename = f"{user_id}_{meal_id}_{uuid.uuid4().hex[:8]}_{filename}"
+        
+        # Save original photo
+        photo_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+        photo_file.save(photo_path)
+        
+        # Create thumbnail
+        thumbnail_filename = f"thumb_{unique_filename}"
+        thumbnail_path = os.path.join(app.config['UPLOAD_FOLDER'], thumbnail_filename)
+        create_thumbnail(photo_path, thumbnail_path)
+        
+        # Save to database
+        conn = sqlite3.connect('cedhealth.db')
+        c = conn.cursor()
+        c.execute('''
+            INSERT INTO meal_photos (user_id, meal_id, photo_filename, photo_path, uploaded_at)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (user_id, meal_id, unique_filename, photo_path, datetime.now().isoformat()))
+        conn.commit()
+        conn.close()
+        
+        return unique_filename
+    return None
 
 # ---------- REMEMBER ME HELPER FUNCTIONS ----------
 def create_remember_token(user_id):
@@ -1267,9 +1371,25 @@ def meals():
     conn = sqlite3.connect('cedhealth.db')
     c = conn.cursor()
 
-    c.execute('SELECT * FROM meals WHERE user_id = ? AND date = ? ORDER BY id DESC',
-              (user_id, date_filter))
+    # Get meals with notes and photos
+    c.execute('''
+        SELECT m.*, mn.notes, mn.mood, mn.hunger_level, mp.photo_filename
+        FROM meals m
+        LEFT JOIN meal_notes mn ON m.id = mn.meal_id
+        LEFT JOIN meal_photos mp ON m.id = mp.meal_id
+        WHERE m.user_id = ? AND m.date = ? 
+        ORDER BY m.id DESC
+    ''', (user_id, date_filter))
     meals_by_user = c.fetchall()
+
+    # Get favorite meals for quick add
+    c.execute('''
+        SELECT * FROM favorite_meals 
+        WHERE user_id = ? 
+        ORDER BY last_used DESC 
+        LIMIT 10
+    ''', (user_id,))
+    favorite_meals_data = c.fetchall()
 
     c.execute('SELECT SUM(protein), SUM(carbs), SUM(fat) FROM meals WHERE user_id = ? AND date = ?',
               (user_id, date_filter))
@@ -1305,7 +1425,8 @@ def meals():
                            current_date=datetime.now().date().isoformat(),
                            saved_meals=saved_meals_data,
                            analyze_results=analyze_results,
-                           total_nutrition=total_nutrition)
+                           total_nutrition=total_nutrition,
+                           favorite_meals=favorite_meals_data)
 
 
 @app.route('/delete_meal/<int:meal_id>', methods=['GET', 'POST'])
@@ -1833,6 +1954,157 @@ def recommended_diet():
                          meal_plan=meal_plan, 
                          error_message=error_message)
 
+
+@app.route('/add_to_favorites', methods=['POST'])
+def add_to_favorites():
+    """Add a meal to favorites"""
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    meal_name = request.form.get('meal_name')
+    calories = request.form.get('calories', type=float)
+    protein = request.form.get('protein', type=float)
+    fat = request.form.get('fat', type=float)
+    carbs = request.form.get('carbs', type=float)
+    
+    if meal_name and calories is not None:
+        conn = sqlite3.connect('cedhealth.db')
+        c = conn.cursor()
+        
+        # Check if favorite already exists
+        c.execute('SELECT id FROM favorite_meals WHERE user_id = ? AND meal_name = ?', 
+                 (session['user_id'], meal_name))
+        existing = c.fetchone()
+        
+        if not existing:
+            c.execute('''
+                INSERT INTO favorite_meals (user_id, meal_name, calories, protein, fat, carbs, created_at, last_used)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (session['user_id'], meal_name, calories, protein or 0, fat or 0, 
+                  carbs or 0, datetime.now().isoformat(), datetime.now().isoformat()))
+            conn.commit()
+        
+        conn.close()
+    
+    return redirect(url_for('meals'))
+
+@app.route('/quick_add_favorite/<int:favorite_id>')
+def quick_add_favorite(favorite_id):
+    """Quickly add a favorite meal with portion multiplier"""
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    multiplier = request.args.get('multiplier', 1.0, type=float)
+    
+    conn = sqlite3.connect('cedhealth.db')
+    c = conn.cursor()
+    
+    # Get favorite meal
+    c.execute('SELECT * FROM favorite_meals WHERE id = ? AND user_id = ?', 
+             (favorite_id, session['user_id']))
+    favorite = c.fetchone()
+    
+    if favorite:
+        # Add to meals with portion multiplier
+        c.execute('''
+            INSERT INTO meals (user_id, meal_name, calories, protein, fat, carbs, date, quantity, unit)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (session['user_id'], f"{favorite[2]} ({multiplier}x)", 
+              favorite[3] * multiplier, favorite[4] * multiplier,
+              favorite[5] * multiplier, favorite[6] * multiplier,
+              datetime.now().date().isoformat(), multiplier, 'serving'))
+        
+        # Update last used timestamp
+        c.execute('UPDATE favorite_meals SET last_used = ? WHERE id = ?',
+                 (datetime.now().isoformat(), favorite_id))
+        
+        conn.commit()
+    
+    conn.close()
+    return redirect(url_for('meals'))
+
+@app.route('/add_meal_note', methods=['POST'])
+def add_meal_note():
+    """Add notes, mood, and hunger level to a meal"""
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    meal_id = request.form.get('meal_id')
+    notes = request.form.get('notes', '')
+    mood = request.form.get('mood', '')
+    hunger_level = request.form.get('hunger_level', type=int)
+    
+    if meal_id:
+        conn = sqlite3.connect('cedhealth.db')
+        c = conn.cursor()
+        
+        # Check if note already exists for this meal
+        c.execute('SELECT id FROM meal_notes WHERE user_id = ? AND meal_id = ?', 
+                 (session['user_id'], meal_id))
+        existing = c.fetchone()
+        
+        if existing:
+            # Update existing note
+            c.execute('''
+                UPDATE meal_notes SET notes = ?, mood = ?, hunger_level = ?
+                WHERE user_id = ? AND meal_id = ?
+            ''', (notes, mood, hunger_level, session['user_id'], meal_id))
+        else:
+            # Create new note
+            c.execute('''
+                INSERT INTO meal_notes (user_id, meal_id, notes, mood, hunger_level, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (session['user_id'], meal_id, notes, mood, hunger_level, 
+                  datetime.now().isoformat()))
+        
+        conn.commit()
+        conn.close()
+    
+    return redirect(url_for('meals'))
+
+@app.route('/upload_meal_photo/<int:meal_id>', methods=['POST'])
+def upload_meal_photo(meal_id):
+    """Upload photo for a specific meal"""
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    if 'meal_photo' not in request.files:
+        return redirect(url_for('meals'))
+    
+    photo_file = request.files['meal_photo']
+    if photo_file.filename == '':
+        return redirect(url_for('meals'))
+    
+    # Save the photo
+    filename = save_meal_photo(photo_file, session['user_id'], meal_id)
+    
+    return redirect(url_for('meals'))
+
+@app.route('/uploads/meal_photos/<filename>')
+def uploaded_meal_photo(filename):
+    """Serve uploaded meal photos"""
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+@app.route('/favorites')
+def favorites():
+    """Display user's favorite meals"""
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    conn = sqlite3.connect('cedhealth.db')
+    c = conn.cursor()
+    
+    # Get favorite meals ordered by most recently used
+    c.execute('''
+        SELECT * FROM favorite_meals 
+        WHERE user_id = ? 
+        ORDER BY last_used DESC
+    ''', (session['user_id'],))
+    
+    favorites_data = c.fetchall()
+    conn.close()
+    
+    return render_template('favorites.html', favorites=favorites_data)
 
 # ---------- RUN ----------
 if __name__ == '__main__':
