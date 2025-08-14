@@ -964,6 +964,40 @@ def meals():
             except Exception as e:
                 error_message = f"Error updating meal: {str(e)}"
 
+    # Handle adding custom meal with manual macros
+    elif request.method == 'POST' and request.form.get('action') == 'add_custom_meal':
+        custom_food_name = request.form.get('custom_food_name')
+        custom_calories = request.form.get('custom_calories', type=float)
+        custom_protein = request.form.get('custom_protein', type=float)
+        custom_fat = request.form.get('custom_fat', type=float)
+        custom_carbs = request.form.get('custom_carbs', type=float)
+
+        if custom_food_name and custom_calories is not None and custom_protein is not None and custom_fat is not None and custom_carbs is not None:
+            try:
+                conn = sqlite3.connect('cedhealth.db')
+                c = conn.cursor()
+                c.execute(
+                    '''
+                    INSERT INTO meals (user_id, meal_name, calories, protein, fat, carbs, date)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ''',
+                    (session['user_id'], custom_food_name, custom_calories, custom_protein,
+                     custom_fat, custom_carbs, datetime.now().date().isoformat()))
+                conn.commit()
+                conn.close()
+                
+                nutrition_data = {
+                    'name': custom_food_name,
+                    'calories': custom_calories,
+                    'protein': custom_protein,
+                    'fat': custom_fat,
+                    'carbs': custom_carbs
+                }
+            except Exception as e:
+                error_message = f"Error adding custom meal: {str(e)}"
+        else:
+            error_message = "Please fill in all nutrition fields."
+
     # Handle adding new meal
     elif request.method == 'POST' and request.form.get('action') == 'add_meal':
         quantity = request.form.get('quantity')

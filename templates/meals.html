@@ -502,11 +502,37 @@
             text-align: center;
         }
 
+        /* Edit Macros form styling */
+        .edit-macros-form input {
+            background: rgba(95, 48, 255, 0.05);
+            border: 1px solid rgba(95, 48, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .edit-macros-form input:focus {
+            border-color: #5f30ff;
+            background: rgba(95, 48, 255, 0.08);
+            outline: none;
+        }
+
+        .edit-macros-form input::placeholder {
+            color: var(--text-muted);
+        }
+
         /* Responsive improvements */
         @media (max-width: 768px) {
             .add-food-form {
                 grid-template-columns: 1fr;
                 gap: 16px;
+            }
+
+            .edit-macros-form {
+                grid-template-columns: 1fr !important;
+                gap: 12px !important;
             }
 
             .meals-grid {
@@ -689,6 +715,28 @@
                                 <button type="submit" name="action" value="add_meal" class="btn">Add</button>
                             </div>
                         </form>
+
+                        <!-- Edit Macros Section -->
+                        <div style="border-top: 1px solid #e2e8f0; padding-top: 30px; margin-top: 30px;">
+                            <h3>📊 Edit Macros</h3>
+                            <p style="color: #64748b; margin-bottom: 20px;">Add a food with custom nutrition values</p>
+
+                            <form method="POST" action="{{ url_for('meals') }}">
+                                <div class="edit-macros-form" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto; gap: 16px; align-items: end; margin-bottom: 20px;">
+                                    <input type="text" name="custom_food_name" placeholder="Food name" required
+                                           style="padding: 12px 16px; border: 1px solid rgba(95, 48, 255, 0.2); border-radius: 8px; font-size: 0.9rem;">
+                                    <input type="number" name="custom_calories" placeholder="Calories" step="0.1" min="0" required
+                                           style="padding: 12px 16px; border: 1px solid rgba(95, 48, 255, 0.2); border-radius: 8px; font-size: 0.9rem;">
+                                    <input type="number" name="custom_protein" placeholder="Protein (g)" step="0.1" min="0" required
+                                           style="padding: 12px 16px; border: 1px solid rgba(95, 48, 255, 0.2); border-radius: 8px; font-size: 0.9rem;">
+                                    <input type="number" name="custom_fat" placeholder="Fat (g)" step="0.1" min="0" required
+                                           style="padding: 12px 16px; border: 1px solid rgba(95, 48, 255, 0.2); border-radius: 8px; font-size: 0.9rem;">
+                                    <input type="number" name="custom_carbs" placeholder="Carbs (g)" step="0.1" min="0" required
+                                           style="padding: 12px 16px; border: 1px solid rgba(95, 48, 255, 0.2); border-radius: 8px; font-size: 0.9rem;">
+                                    <button type="submit" name="action" value="add_custom_meal" class="btn">Add Custom</button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
