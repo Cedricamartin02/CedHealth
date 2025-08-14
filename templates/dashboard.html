@@ -357,7 +357,7 @@
             cursor: pointer;
             padding: 0;
         }
-        
+
         .mobile-menu-btn span {
             display: block;
             height: 3px;
@@ -366,19 +366,19 @@
             border-radius: 2px;
             transition: all 0.3s ease;
         }
-        
+
         .mobile-menu-btn.active span:nth-child(1) {
             transform: rotate(45deg) translate(8px, 8px);
         }
-        
+
         .mobile-menu-btn.active span:nth-child(2) {
             opacity: 0;
         }
-        
+
         .mobile-menu-btn.active span:nth-child(3) {
             transform: rotate(-45deg) translate(8px, -8px);
         }
-        
+
         .mobile-menu {
             position: fixed;
             top: 0;
@@ -392,12 +392,12 @@
             visibility: hidden;
             transition: all 0.3s ease;
         }
-        
+
         .mobile-menu.active {
             opacity: 1;
             visibility: visible;
         }
-        
+
         .mobile-menu-content {
             display: flex;
             flex-direction: column;
@@ -407,7 +407,7 @@
             gap: 2rem;
             padding: 2rem;
         }
-        
+
         .mobile-nav-link {
             color: var(--text-primary);
             text-decoration: none;
@@ -421,30 +421,30 @@
             min-width: 200px;
             text-align: center;
         }
-        
+
         .mobile-nav-link:hover {
             background: rgba(95, 48, 255, 0.2);
             color: var(--accent-color);
             transform: translateY(-2px);
         }
-        
+
         .desktop-nav {
             display: flex;
         }
-        
+
         body.menu-open {
             overflow: hidden;
         }
-        
+
         @media (max-width: 768px) {
             .mobile-menu-btn {
                 display: flex;
             }
-            
+
             .desktop-nav {
                 display: none;
             }
-            
+
             .mobile-nav-link {
                 font-size: 1.2rem;
                 padding: 0.8rem 1.5rem;
@@ -455,13 +455,13 @@
                 display: none !important;
             }
         }
-        
+
         @media (max-width: 480px) {
             .mobile-menu-content {
                 gap: 1.5rem;
                 padding: 1rem;
             }
-            
+
             .mobile-nav-link {
                 font-size: 1rem;
                 padding: 0.6rem 1rem;
@@ -486,13 +486,12 @@
             <div class="nav-right">
                 <!-- Desktop Navigation Links -->
                 <div class="nav-links desktop-nav">
-                    <a href="/meals" class="nav-link">Meals</a>
-                    <a href="/explore_foods" class="nav-link">Explore Foods</a>
+                    <a href="/meals" class="nav-link">Meals & Foods</a>
                     <a href="/workouts" class="nav-link">Workouts</a>
                     <a href="/goals" class="nav-link">Goals</a>
                     <a href="/logout" class="btn btn-outline">Logout</a>
                 </div>
-                
+
                 <!-- Mobile Menu Button -->
                 <button class="mobile-menu-btn" id="mobile-menu-btn">
                     <span></span>
@@ -501,13 +500,12 @@
                 </button>
             </div>
         </div>
-        
+
         <!-- Mobile Menu Overlay -->
         <div class="mobile-menu" id="mobile-menu">
             <div class="mobile-menu-content">
                 <a href="/dashboard" class="mobile-nav-link">🏠 Dashboard</a>
-                <a href="/meals" class="mobile-nav-link">🍽️ Meals</a>
-                <a href="/explore_foods" class="mobile-nav-link">🔍 Explore Foods</a>
+                <a href="/meals" class="mobile-nav-link">🍽️ Meals & Foods</a>
                 <a href="/workouts" class="mobile-nav-link">💪 Workouts</a>
                 <a href="/goals" class="mobile-nav-link">🎯 Goals</a>
                 <a href="/logout" class="mobile-nav-link">🚪 Logout</a>
@@ -567,7 +565,7 @@
                         <div class="chart-container" style="height: 280px; margin-bottom: 30px;">
                             <canvas id="caloriesChart"></canvas>
                         </div>
-                        
+
                         <!-- Nutrition Progress Circles -->
                         <div class="nutrition-progress-section">
                             <div class="macros-grid" style="grid-template-columns: repeat(3, 1fr); justify-items: center; gap: 30px;">
@@ -941,14 +939,14 @@
                 const circle = document.getElementById(id);
                 const circumference = 2 * Math.PI * 32;
                 const targetOffset = circumference - (progress / 100) * circumference;
-                
+
                 // Start from full circle
                 circle.style.strokeDashoffset = circumference;
-                
+
                 // Animate to target
                 let currentOffset = circumference;
                 const step = (circumference - targetOffset) / 60; // 1 second at 60fps
-                
+
                 function animate() {
                     currentOffset -= step;
                     if (currentOffset <= targetOffset) {
@@ -959,7 +957,7 @@
                     circle.style.strokeDashoffset = currentOffset;
                     requestAnimationFrame(animate);
                 }
-                
+
                 requestAnimationFrame(animate);
             }
 
@@ -967,11 +965,11 @@
             setTimeout(() => {
                 animateProgressCircle('protein-progress', {{ protein_progress }});
             }, 800);
-            
+
             setTimeout(() => {
                 animateProgressCircle('carbs-progress', {{ carbs_progress }});
             }, 1000);
-            
+
             setTimeout(() => {
                 animateProgressCircle('fat-progress', {{ fat_progress }});
             }, 1200);
@@ -980,13 +978,13 @@
         // Mobile Menu Toggle
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');
         const mobileMenu = document.getElementById('mobile-menu');
-        
+
         mobileMenuBtn?.addEventListener('click', () => {
             mobileMenu.classList.toggle('active');
             mobileMenuBtn.classList.toggle('active');
             document.body.classList.toggle('menu-open');
         });
-        
+
         // Close mobile menu when clicking on a link
         document.querySelectorAll('.mobile-nav-link').forEach(link => {
             link.addEventListener('click', () => {
@@ -995,7 +993,7 @@
                 document.body.classList.remove('menu-open');
             });
         });
-        
+
         // Close mobile menu when clicking outside
         mobileMenu?.addEventListener('click', (e) => {
             if (e.target === mobileMenu) {

@@ -240,6 +240,110 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
+
+        .explore-section, .manual-entry-section, .barcode-section {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .camera-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            border-radius: 12px;
+            border: 2px dashed #cbd5e1;
+            text-align: center;
+        }
+
+        .camera-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .camera-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .camera-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .camera-btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .capture-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 60%;
+            border: 3px solid #ef4444;
+            border-radius: 8px;
+            background: rgba(239, 68, 68, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        }
+
+        .barcode-input {
+            font-family: monospace;
+            letter-spacing: 1px;
+        }
+
+        .scan-result {
+            margin-top: 15px;
+            padding: 15px;
+            background: #dcfce7;
+            border: 2px solid #16a34a;
+            border-radius: 8px;
+            color: #15803d;
+            font-weight: 600;
+        }
+
+        .search-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        #mealNutritionResults .nutrition-card {
+            margin-top: 20px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 <body>
@@ -350,28 +454,103 @@
                 <div class="section-card">
                     <h2>➕ Add New Meal</h2>
                     
-                    {% if error_message and request.form.get('action') == 'add_meal' %}
-                        <div class="error">{{ error_message }}</div>
-                    {% endif %}
+                    <!-- Food Search Section -->
+                    <div class="explore-section">
+                        <h3>🔍 Search Foods</h3>
+                        <p>Search for foods with autocomplete suggestions and get instant nutrition facts</p>
 
-                    {% if nutrition_data %}
-                        <div class="success-message">Meal "{{ nutrition_data.name }}" added successfully!</div>
-                    {% endif %}
-
-                    <form method="POST" action="{{ url_for('meals') }}">
-                        <div class="form-group">
-                            <div class="input-wrapper">
-                                <input type="number" name="quantity" placeholder="Quantity (e.g., 2)" step="0.1" min="0.1" required>
-                            </div>
-                            <div class="input-wrapper">
-                                <input type="text" name="unit" placeholder="Unit (e.g., cups, oz)" required>
-                            </div>
-                            <div class="input-wrapper">
-                                <input type="text" name="food_name" placeholder="Food name" required>
-                            </div>
-                            <button type="submit" name="action" value="add_meal" class="btn">Add Meal</button>
+                        <div class="search-wrapper">
+                            <input type="text" 
+                                   id="mealFoodSearchInput"
+                                   placeholder="Start typing a food name (e.g., apple, chicken breast)" 
+                                   autocomplete="off"
+                                   class="search-input">
+                            <div class="dropdown" id="mealSearchDropdown"></div>
                         </div>
-                    </form>
+
+                        <div class="search-actions" style="margin-top: 15px; text-align: center;">
+                            <button id="getMealNutritionBtn" class="btn" disabled>Get Nutrition Facts</button>
+                        </div>
+
+                        <div id="mealNutritionResults"></div>
+                    </div>
+
+                    <!-- Manual Entry Section -->
+                    <div class="manual-entry-section" style="margin-top: 40px; padding-top: 30px; border-top: 2px solid #e2e8f0;">
+                        <h3>📝 Manual Entry</h3>
+                        
+                        {% if error_message and request.form.get('action') == 'add_meal' %}
+                            <div class="error">{{ error_message }}</div>
+                        {% endif %}
+
+                        {% if nutrition_data %}
+                            <div class="success-message">Meal "{{ nutrition_data.name }}" added successfully!</div>
+                        {% endif %}
+
+                        <form method="POST" action="{{ url_for('meals') }}">
+                            <div class="form-group">
+                                <div class="input-wrapper">
+                                    <input type="number" name="quantity" placeholder="Quantity (e.g., 2)" step="0.1" min="0.1" required>
+                                </div>
+                                <div class="input-wrapper">
+                                    <input type="text" name="unit" placeholder="Unit (e.g., cups, oz)" required>
+                                </div>
+                                <div class="input-wrapper">
+                                    <input type="text" name="food_name" placeholder="Food name" required>
+                                </div>
+                                <button type="submit" name="action" value="add_meal" class="btn">Add Meal</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Barcode Scanner Section -->
+                    <div class="barcode-section" style="margin-top: 40px; padding-top: 30px; border-top: 2px solid #e2e8f0;">
+                        <h3>📱 Barcode Scanner</h3>
+                        <p>Enter a product barcode to get detailed nutrition information</p>
+
+                        {% if error_message and request.form.get('action') == 'scan_barcode' %}
+                            <div class="error">{{ error_message }}</div>
+                        {% endif %}
+
+                        <form method="POST" action="{{ url_for('explore_foods') }}" id="mealBarcodeForm">
+                            <div class="form-group">
+                                <div class="input-wrapper">
+                                    <input type="text" 
+                                           name="barcode" 
+                                           id="mealBarcodeInput"
+                                           class="barcode-input"
+                                           placeholder="Enter barcode (e.g., 3017620422003)" 
+                                           pattern="[0-9]+"
+                                           required>
+                                </div>
+                                <button type="submit" name="action" value="scan_barcode" class="btn">Scan Product</button>
+                            </div>
+                        </form>
+
+                        <div class="camera-section">
+                            <div class="camera-controls">
+                                <button id="mealStartCamera" class="camera-btn">
+                                    📷 Start Camera
+                                </button>
+                                <button id="mealCapturePhoto" class="camera-btn" disabled>
+                                    📸 Capture Photo
+                                </button>
+                                <button id="mealStopCamera" class="camera-btn" disabled>
+                                    ⏹️ Stop Camera
+                                </button>
+                            </div>
+
+                            <div id="mealVideoContainer" style="display: none;">
+                                <video id="mealCameraVideo" autoplay playsinline></video>
+                                <div class="capture-overlay">
+                                    Position barcode here and click capture
+                                </div>
+                            </div>
+
+                            <canvas id="mealCanvas" style="display: none;"></canvas>
+                            <div id="mealScanResult"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -498,6 +677,7 @@
         </div>
     </div>
 
+    <script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
     <script>
         let itemCounter = 1;
         let searchTimeout;
@@ -614,7 +794,335 @@
             if (firstInput) {
                 setupSearchListener(firstInput);
             }
+
+            // Initialize meal search functionality
+            setupMealSearchFunctionality();
+            setupMealBarcodeScanner();
         });
+
+        // Meal food search functionality
+        function setupMealSearchFunctionality() {
+            const searchInput = document.getElementById('mealFoodSearchInput');
+            const dropdown = document.getElementById('mealSearchDropdown');
+            const getNutritionBtn = document.getElementById('getMealNutritionBtn');
+            const nutritionResults = document.getElementById('mealNutritionResults');
+            let searchTimeout;
+            let selectedFood = null;
+
+            if (!searchInput) return;
+
+            searchInput.addEventListener('input', function() {
+                const query = this.value.trim();
+
+                if (query !== selectedFood) {
+                    selectedFood = null;
+                    getNutritionBtn.disabled = query.length === 0;
+                }
+
+                clearTimeout(searchTimeout);
+
+                if (query.length < 2) {
+                    dropdown.style.display = 'none';
+                    return;
+                }
+
+                searchTimeout = setTimeout(() => {
+                    fetch(`/search_foods?q=${encodeURIComponent(query)}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            dropdown.innerHTML = '';
+
+                            // Add common foods
+                            if (data.common && data.common.length > 0) {
+                                data.common.forEach(item => {
+                                    const div = document.createElement('div');
+                                    div.className = 'dropdown-item';
+                                    div.innerHTML = `<strong>${item.food_name}</strong><br><small style="color: #16a34a;">📊 ${item.source.toUpperCase()} - Common food</small>`;
+                                    div.addEventListener('click', () => {
+                                        searchInput.value = item.food_name;
+                                        selectedFood = item.food_name;
+                                        dropdown.style.display = 'none';
+                                        getNutritionBtn.disabled = false;
+                                        setTimeout(() => getMealNutritionFacts(item.food_name), 100);
+                                    });
+                                    dropdown.appendChild(div);
+                                });
+                            }
+
+                            // Add branded foods
+                            if (data.branded && data.branded.length > 0) {
+                                data.branded.forEach(item => {
+                                    const div = document.createElement('div');
+                                    div.className = 'dropdown-item';
+                                    const sourceColor = item.source === 'nutritionix' ? '#3b82f6' : '#64748b';
+                                    div.innerHTML = `<strong>${item.food_name}</strong><br><small style="color: ${sourceColor};">🏪 ${item.source.toUpperCase()} - ${item.brand_name}</small>`;
+                                    div.addEventListener('click', () => {
+                                        const fullName = item.brand_name ? `${item.brand_name} ${item.food_name}` : item.food_name;
+                                        searchInput.value = fullName;
+                                        selectedFood = fullName;
+                                        dropdown.style.display = 'none';
+                                        getNutritionBtn.disabled = false;
+                                        setTimeout(() => getMealNutritionFacts(fullName), 100);
+                                    });
+                                    dropdown.appendChild(div);
+                                });
+                            }
+
+                            // Add USDA foods
+                            if (data.usda && data.usda.length > 0) {
+                                data.usda.forEach(item => {
+                                    const div = document.createElement('div');
+                                    div.className = 'dropdown-item';
+                                    div.innerHTML = `<strong>${item.food_name}</strong><br><small style="color: #dc2626;">🇺🇸 USDA Database</small>`;
+                                    div.addEventListener('click', () => {
+                                        searchInput.value = item.food_name;
+                                        selectedFood = item.food_name;
+                                        dropdown.style.display = 'none';
+                                        getNutritionBtn.disabled = false;
+                                        setTimeout(() => getMealNutritionFacts(item.food_name), 100);
+                                    });
+                                    dropdown.appendChild(div);
+                                });
+                            }
+
+                            if (dropdown.children.length > 0) {
+                                dropdown.style.display = 'block';
+                            } else {
+                                dropdown.style.display = 'none';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Search error:', error);
+                            dropdown.style.display = 'none';
+                        });
+                }, 300);
+            });
+
+            searchInput.addEventListener('blur', function() {
+                setTimeout(() => dropdown.style.display = 'none', 150);
+            });
+
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const query = this.value.trim();
+                    if (query) getMealNutritionFacts(query);
+                }
+            });
+
+            if (getNutritionBtn) {
+                getNutritionBtn.addEventListener('click', function() {
+                    const query = searchInput.value.trim();
+                    if (query) getMealNutritionFacts(query);
+                });
+            }
+        }
+
+        function getMealNutritionFacts(foodName) {
+            if (!foodName.trim()) return;
+
+            const getNutritionBtn = document.getElementById('getMealNutritionBtn');
+            const nutritionResults = document.getElementById('mealNutritionResults');
+
+            getNutritionBtn.disabled = true;
+            getNutritionBtn.textContent = 'Loading...';
+
+            nutritionResults.innerHTML = '<div style="text-align: center; color: #3b82f6; padding: 20px;">🔍 Getting nutrition information...</div>';
+
+            const formData = new FormData();
+            formData.append('food_query', foodName);
+            formData.append('action', 'lookup_food');
+
+            fetch('/explore_foods', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const nutritionCard = doc.querySelector('.nutrition-card');
+
+                if (nutritionCard) {
+                    nutritionResults.innerHTML = nutritionCard.outerHTML + `
+                        <div style="text-align: center; margin-top: 20px;">
+                            <button class="btn" onclick="addFoundFoodToMeals('${foodName}')">Add to Today's Meals</button>
+                        </div>
+                    `;
+                    nutritionResults.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    const errorDiv = doc.querySelector('.error');
+                    if (errorDiv) {
+                        nutritionResults.innerHTML = `<div style="color: #ef4444; padding: 20px; text-align: center;">❌ ${errorDiv.textContent}</div>`;
+                    } else {
+                        nutritionResults.innerHTML = '<div style="color: #f59e0b; padding: 20px; text-align: center;">⚠️ No nutrition data found for this food.</div>';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Nutrition lookup error:', error);
+                nutritionResults.innerHTML = '<div style="color: #ef4444; padding: 20px; text-align: center;">❌ Error getting nutrition information. Please try again.</div>';
+            })
+            .finally(() => {
+                getNutritionBtn.disabled = false;
+                getNutritionBtn.textContent = 'Get Nutrition Facts';
+            });
+        }
+
+        function addFoundFoodToMeals(foodName) {
+            // Pre-fill the manual entry form with the found food
+            const manualFoodNameInput = document.querySelector('input[name="food_name"]');
+            const quantityInput = document.querySelector('input[name="quantity"]');
+            const unitInput = document.querySelector('input[name="unit"]');
+
+            if (manualFoodNameInput) {
+                manualFoodNameInput.value = foodName;
+                quantityInput.value = '1';
+                unitInput.value = 'serving';
+                
+                // Scroll to manual entry section
+                document.querySelector('.manual-entry-section').scrollIntoView({ behavior: 'smooth' });
+                
+                // Highlight the form briefly
+                const form = document.querySelector('.manual-entry-section form');
+                form.style.background = '#dcfce7';
+                form.style.borderRadius = '12px';
+                form.style.padding = '20px';
+                setTimeout(() => {
+                    form.style.background = '';
+                    form.style.padding = '';
+                }, 2000);
+            }
+        }
+
+        // Meal barcode scanner functionality
+        function setupMealBarcodeScanner() {
+            let mealCameraStream = null;
+            let mealCodeReader = null;
+            let mealIsScanning = false;
+
+            // Initialize barcode reader
+            setTimeout(() => {
+                try {
+                    if (typeof ZXing !== 'undefined') {
+                        mealCodeReader = new ZXing.BrowserMultiFormatReader();
+                    }
+                } catch (error) {
+                    console.error('Error initializing meal barcode reader:', error);
+                }
+            }, 1000);
+
+            const startCameraBtn = document.getElementById('mealStartCamera');
+            const captureBtn = document.getElementById('mealCapturePhoto');
+            const stopCameraBtn = document.getElementById('mealStopCamera');
+            const video = document.getElementById('mealCameraVideo');
+            const videoContainer = document.getElementById('mealVideoContainer');
+            const canvas = document.getElementById('mealCanvas');
+            const scanResult = document.getElementById('mealScanResult');
+            const barcodeInput = document.getElementById('mealBarcodeInput');
+
+            if (startCameraBtn) {
+                startCameraBtn.addEventListener('click', async () => {
+                    try {
+                        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                            scanResult.innerHTML = '<div style="color: #ef4444;">❌ Camera access not supported in this browser.</div>';
+                            return;
+                        }
+
+                        scanResult.innerHTML = '<div style="color: #3b82f6;">📷 Starting camera...</div>';
+
+                        const constraints = {
+                            video: { 
+                                facingMode: { ideal: 'environment' },
+                                width: { ideal: 1280, min: 640 },
+                                height: { ideal: 720, min: 480 }
+                            }
+                        };
+
+                        try {
+                            mealCameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+                        } catch (backCameraError) {
+                            mealCameraStream = await navigator.mediaDevices.getUserMedia({
+                                video: { 
+                                    width: { ideal: 1280, min: 640 },
+                                    height: { ideal: 720, min: 480 }
+                                }
+                            });
+                        }
+
+                        video.srcObject = mealCameraStream;
+                        videoContainer.style.display = 'block';
+
+                        video.onloadedmetadata = () => {
+                            startCameraBtn.disabled = true;
+                            captureBtn.disabled = false;
+                            stopCameraBtn.disabled = false;
+                            scanResult.innerHTML = '<div style="color: #3b82f6;">📷 Camera ready! Position barcode in the red frame and click capture.</div>';
+                        };
+
+                    } catch (error) {
+                        console.error('Error accessing camera:', error);
+                        scanResult.innerHTML = '<div style="color: #ef4444;">❌ Could not access camera. Please check permissions.</div>';
+                    }
+                });
+            }
+
+            if (captureBtn) {
+                captureBtn.addEventListener('click', () => {
+                    if (mealIsScanning || !mealCodeReader) return;
+
+                    mealIsScanning = true;
+                    captureBtn.disabled = true;
+                    scanResult.innerHTML = '<div style="color: #3b82f6;">🔍 Scanning for barcode...</div>';
+
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0);
+
+                    mealCodeReader.decodeFromCanvas(canvas)
+                        .then(result => {
+                            mealIsScanning = false;
+                            captureBtn.disabled = false;
+
+                            const barcode = result.getText();
+                            barcodeInput.value = barcode;
+                            scanResult.innerHTML = `<div class="scan-result">✅ Barcode detected: ${barcode}</div>`;
+
+                            setTimeout(() => {
+                                if (confirm('Barcode detected! Submit form to get product information?')) {
+                                    document.getElementById('mealBarcodeForm').submit();
+                                }
+                            }, 1000);
+                        })
+                        .catch(error => {
+                            mealIsScanning = false;
+                            captureBtn.disabled = false;
+                            scanResult.innerHTML = '<div style="color: #f59e0b;">⚠️ No barcode detected. Try again.</div>';
+                        });
+                });
+            }
+
+            if (stopCameraBtn) {
+                stopCameraBtn.addEventListener('click', () => {
+                    if (mealCameraStream) {
+                        mealCameraStream.getTracks().forEach(track => track.stop());
+                        mealCameraStream = null;
+                    }
+
+                    video.srcObject = null;
+                    videoContainer.style.display = 'none';
+
+                    startCameraBtn.disabled = false;
+                    captureBtn.disabled = true;
+                    stopCameraBtn.disabled = true;
+                    mealIsScanning = false;
+
+                    scanResult.innerHTML = '<div style="color: #64748b;">📷 Camera stopped.</div>';
+                });
+            }
+        }
     </script>
 </body>
 </html>
