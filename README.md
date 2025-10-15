@@ -1,33 +1,37 @@
-# 🧠 CedHealth  
-**Your Personal Health & Nutrition Tracker**
+# CedHealth 
+_A Smart, Simple, and Scalable Health Tracking App_
 
-CedHealth is a Flask-based web app that helps users log meals, track workouts, and monitor their fitness goals — all in one place.  
-Built with simplicity, analytics, and long-term progress in mind.
-
----
-
-## 🚀 Features
-- 🍽️ **Meal Analyzer** — Log and analyze meals with calories, protein, carbs, and fats  
-- 🏋️ **Workout Tracker** — Record sets, reps, and exercises to visualize progress  
-- 🎯 **Goal Setting** — Set and track fitness or nutrition goals  
-- 📊 **Progress Charts** — Interactive visual feedback on calories and protein over time  
-- 💾 **Persistent Data** — Powered by SQLite for secure, local data storage  
-- 🔍 **Smart Analyzer** — AI-powered meal insights and nutritional feedback  
+CedHealth is a full-stack **Flask** web application designed to help users take control of their nutrition and fitness goals.  
+It combines meal logging, workout tracking, and real-time analytics into one intuitive dashboard.
 
 ---
 
-## 🧰 Tech Stack
-- **Frontend:** HTML, CSS, JavaScript  
-- **Backend:** Python (Flask Framework)  
-- **Database:** SQLite  
-- **Visualization:** Chart.js  
-- **Hosting:** GitHub Pages (for repo), Replit (for live demo)  
+## Overview
+
+**CedHealth** allows users to:
+- Log and analyze daily meals with full macronutrient breakdowns  
+- Track workouts, sets, and progress over time  
+- Visualize calorie and protein trends through interactive charts  
+- Set and monitor custom health or strength goals  
+- Store and access data securely using a local SQLite database  
 
 ---
 
-## ⚙️ Run Locally
+## Tech Stack
+
+| Layer | Technologies Used |
+|-------|-------------------|
+| **Frontend** | HTML5, CSS3, JavaScript, Chart.js |
+| **Backend** | Python (Flask Framework) |
+| **Database** | SQLite |
+| **Environment** | Replit / Local (Flask CLI) |
+| **Version Control** | Git + GitHub |
+
+---
+
+## Setup Instructions
+
+### 1. Clone the Repository
 ```bash
-# Clone the repo
 git clone https://github.com/cedricamartin02/CedHealth.git
-
-# Move into the p
+cd CedHealth
